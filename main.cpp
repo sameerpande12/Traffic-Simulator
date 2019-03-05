@@ -2,16 +2,18 @@
 Axes:- Right -> Positive,
        Down -> Positive
 
-00 01 02
-10 11 12
-
+(i,j) for roads-> indexing pattern
+----------------------
+0,0     0,1       0,2
+1,0     1,1       1,2
+-----------------------
 references- https://www.geeksforgeeks.org/stdany-class-in-c/
 */
 #include<any>
 #include<cstring>
 #include<string>
 #include <iostream>
-
+#include<vector>
 using namespace std;
 
 float getRandom();
@@ -21,6 +23,7 @@ class Road{
   int length;//
   int width;// make them of type final
   bool** road_matrix;
+  Vector<Vehicle> vehicles;
 }
 
 class Vehicle{
@@ -41,14 +44,14 @@ public:
   float overtake_freq = 0.1;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
-  //overtaking done only from right side of vechilce to be overtaken
+  //overtaking done only from right side of vehicle to be overtaken
   bool changing_lane = false;
   /*probability of overtaking given overtaking is possible*/
-  /*we define overtaking is possible when a smaller vechile can shift to a lane(s) on which no trace of the vehicle to be overtaken is found*/
+  /*we define overtaking is possible when a smaller vehicle can shift to a lane(s) on which no trace of the vehicle to be overtaken is found*/
   /*for time being assume instantaneous breaking is possible:- Scenario is almost true for indian drivers xD*/
 
   int velocity[2]={0,0};//velocity[0] is x_velocity and velocity[1] is y_velocity
-  int lane_no;//represents lane on which top right corner of vechile is
+  int lane_no;//represents lane on which top right corner of vehicle is
   Road on_road;//road on which vehicle is moving
   int pos[2] = {0,0};
 
@@ -104,8 +107,26 @@ public:
   }
 }
 
-void updateRoad(){//function to update road matrix
+void updateRoad(Road rd){//function to update road matrix
+  Vector<Vehicle> vehicles = rd.vehicles;
+  for(int i = 0;i<rd.width;i++)
+   for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
 
+  Vector<Vehicle>::iterator iter = vehicles.begin();
+  for(iter = vehicles.begin();iter<vehicles.end();iter++)*iter.changeVelocity();
+
+  iter = vehicles.begin();
+  for(iter = vehicles.begin();iter<vehicles.end();iter++){
+    *iter.changePosition();
+    for(int i = 0;i<*iter.width;i++){
+      for(int j = 0;j<*iter.length;j++){
+        if(*iter.position[1]>=j){
+          rd.road_matrix[i+*iter.position[0]][*iter.position[1]-j]=true;
+        }
+      }
+    }
+  }
+  //updates the road by one unit time
 }
 
 int main(char** argc, int argv){
