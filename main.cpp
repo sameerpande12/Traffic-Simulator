@@ -13,24 +13,25 @@ references- https://www.geeksforgeeks.org/stdany-class-in-c/
 #include<cstring>
 #include<string>
 #include <iostream>
+#include<map>
 #include<vector>
 using namespace std;
 
-float getRandom();
+float getRandom();//returns a float between 0 to 1 in uniform distribution
 
 class Road{
   int id;//
   int length;//
   int width;// make them of type final
   bool** road_matrix;
-  Vector<Vehicle> vehicles;
+  map<int,Vehicle> vehicles;
 }
 
 class Vehicle{
 public:
 
  //existential parameters
-  int id;
+  int id;//ids should be unique for all the vehicles
   string type;
   string color;
   int length;
@@ -108,23 +109,33 @@ public:
 }
 
 void updateRoad(Road rd){//function to update road matrix
-  Vector<Vehicle> vehicles = rd.vehicles;
+  map<int,Vehicle> vehicles = rd.vehicles;
   for(int i = 0;i<rd.width;i++)
    for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
 
-  Vector<Vehicle>::iterator iter = vehicles.begin();
-  for(iter = vehicles.begin();iter<vehicles.end();iter++)*iter.changeVelocity();
+  map<int,Vehicle>::iterator iter = vehicles.begin();
+  for(iter = vehicles.begin();iter<vehicles.end();iter++)iter->second.changeVelocity();
 
   iter = vehicles.begin();
+
+  std::vector<int> ids_to_remove;
   for(iter = vehicles.begin();iter<vehicles.end();iter++){
-    *iter.changePosition();
-    for(int i = 0;i<*iter.width;i++){
-      for(int j = 0;j<*iter.length;j++){
-        if(*iter.position[1]>=j){
-          rd.road_matrix[i+*iter.position[0]][*iter.position[1]-j]=true;
+    iter->second.changePosition();
+    for(int i = 0;i<iter->second.width;i++){
+      for(int j = 0;j<iter->second.length;j++){
+        if(iter->second.position[1]>=j && iter->second.position[1]-j<=rd.length){
+          rd.road_matrix[i+iter->second.position[0]][iter->second.position[1]-j]=true;
         }
       }
     }
+    if(iter->second.position[1]-iter->second.length+1>=rd.length){
+         ids_to_remove.push_back(iter->first);
+    }
+  }
+
+  Vector<int>::iterator vec_iter = ids_to_remove.begin();
+  for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
+    vehicles.erase(*vec_iter);
   }
   //updates the road by one unit time
 }
