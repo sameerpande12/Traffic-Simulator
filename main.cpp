@@ -38,7 +38,7 @@ public:
   int max_xspeed = 3;
   int max_acceleration = 1;
   float lane_change_freq = 0.3;
-  float overtake_freq = 0.3;
+  float overtake_freq = 0.1;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
   //overtaking done only from right side of vechilce to be overtaken
