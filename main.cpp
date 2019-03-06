@@ -35,7 +35,8 @@ public:
   int width;// make them of type final
   char** road_matrix;
   map<int,Vehicle*> vehicles;
-  int sam=100;
+  map<char,Vehicle*> symbol_maps;
+
 };
 void printRoad(Road rd);
 class Vehicle{
@@ -119,17 +120,44 @@ public:
          if(to_overtake){//checks if any other vehicle could crash into it assuming the max_xspeed of current vehicle
 
              // pos[0]+overtake_vertical_speed   to pos[0]+overtake_vertical_speed + width-1
-             for(int i = pos[0]+overtake_vertical_speed; i< pos[0]+overtake_vertical_speed+width;i++){
-               for(int j = 1;j<=max_xspeed;j++){
+            /* for(int i = pos[0]+overtake_vertical_speed; i< pos[0]+overtake_vertical_speed+width;i++){
+               for(int j = 1;j<=max_xspeed;j++){ OVERTAKING RULE BY ASSUMING THAT the j-limit is determined only by max_speed of overtaking vehicle and not vehicles behind them
                  if(pos[1]-length+1+overtake_horizontal_speed-max_xspeed>=0 && pos[1]-length+1+overtake_horizontal_speed - max_xspeed < on_road.length){
                     if(on_road.road_matrix[i][pos[1]-length+1+overtake_horizontal_speed - max_xspeed]!=' '){
                       to_overtake = false;
                       break;
                     }
-                  }
+                  }  //O(n) in total
                }
+
+
                if(to_overtake==false)break;
-             }
+             }*/
+
+            map<char,Vehicle*>::iterator sym_iter = on_road.symbol_maps.begin();
+            int x_left = pos[1]+overtake_horizontal_speed -length + 1;
+            int x_right = pos[1]+overtake_horizontal_speed;
+
+            int y_top = pos[0]+overtake_vertical_speed;
+            int y_bottom = y_top + width -1;
+
+
+            for(sym_iter = on_road.symbol_maps.begin();sym_iter != on_road.symbol_maps.end();sym_iter++){
+              // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+               Vehicle* temp_veh = sym_iter->second;
+               int vx_left = temp_veh -> pos[1];
+               int vx_right = vx_left + temp_veh->velocity[1]+ temp_veh->max_acceleration;
+               int vx_top = temp_veh -> pos[0];
+               int vx_bottom = vx_top + temp_veh -> width -1;
+
+               if( ((y_top - vx_top)*(y_top - vx_bottom) <= 0) ||  ((y_bottom - vx_top)*(y_bottom - vx_bottom) <= 0) ){
+                 if( vx_left < x_left && x_left<= vx_right )// if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+                   {
+                     to_overtake = false;
+                     break;
+                   }
+               }
+            }
 
          }
       }
@@ -160,6 +188,7 @@ public:
   }
 };
 
+
 void updateRoad(Road* rd){//function to update road matrix
   //cout<<"entering updateRoad"<<endl;
 
@@ -173,6 +202,7 @@ void updateRoad(Road* rd){//function to update road matrix
 
 
   std::vector<int> ids_to_remove;
+  std::vector<char> syms_to_remove;
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++)(iter->second)->changePosition();
   iter = rd->vehicles.begin();
 
@@ -195,6 +225,7 @@ void updateRoad(Road* rd){//function to update road matrix
     }
     if((iter->second)->pos[1]-(iter->second)->length+1>=rd->length){
          ids_to_remove.push_back(iter->first);
+         syms_to_remove.push_back(iter->second->symbol);
     }
   }
 
@@ -203,7 +234,14 @@ void updateRoad(Road* rd){//function to update road matrix
   vector<int>::iterator vec_iter = ids_to_remove.begin();
   for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
     rd->vehicles.erase(*vec_iter);
+
     cout<<"REMOVING:"<<*vec_iter<<endl;
+  }
+  vector<char>::iterator char_iter = syms_to_remove.begin();
+  for(char_iter = syms_to_remove.begin();char_iter<syms_to_remove.end();char_iter++){
+    rd->vehicles.erase(*char_iter);
+
+    cout<<"REMOVING:"<<*char_iter<<endl;
   }
 //  cout<<"leaving UpdateRoad"<<endl;
   //updates the road by one unit time
@@ -228,6 +266,7 @@ void updatePositionsOnRoad(Road* rd){
     }
   }
 }
+
 void printRoad(Road* rd){
   for(int i = 0;i<2*rd->length;i++)cout<<"-";
   cout<<endl;
@@ -240,6 +279,8 @@ void printRoad(Road* rd){
   }
   cout<<endl;
 }
+
+
 void updateRoad(Road* road, int t){
   if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
   else{
@@ -275,6 +316,8 @@ int main(int argc, char** argv){
   mycar.on_road = road;
   mycar.symbol='c';
   road.vehicles.insert(std::pair<int,Vehicle*>(mycar.id,&mycar));
+  road.symbol_maps.insert(std::pair<char,Vehicle*>(mycar.symbol,&mycar));
+
 
   Vehicle bike;
   bike.id = 2;
@@ -287,13 +330,13 @@ int main(int argc, char** argv){
   bike.on_road = road;
   bike.symbol = 'b';
   road.vehicles.insert(std::pair<int,Vehicle*>(bike.id,&bike));
+  road.symbol_maps.insert(std::pair<char,Vehicle*>(bike.symbol,&bike));
 
+  updatePositionsOnRoad(&road);
+  printRoad(&road);
+  cout<<endl;//initial condition upon definition
 
-updatePositionsOnRoad(&road);
-printRoad(&road);
-cout<<endl;//initial condition upon definition
-
-updateRoad(&road,5);
+  updateRoad(&road,15);
 
 
 }
