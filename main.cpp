@@ -54,7 +54,7 @@ public:
   int max_xspeed = 3;
   int max_acceleration = 1;
   float lane_change_freq = 0.3;
-  float overtake_freq = 0;
+  float overtake_freq = 0.5;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
   //overtaking done only from right side of vehicle to be overtaken
@@ -83,7 +83,7 @@ public:
      for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
          for(int j = 1; j <= max_xvel ; j++){
 
-          if( i+pos[0]<width && j+pos[1]<length){
+          if( /*i+pos[0]< on_road.width -> this part must be true*/  j+pos[1]< on_road.length){
               if(on_road.road_matrix[i+pos[0]][j+pos[1]] != ' '){
                 max_xvel = j-1;
                 continue;
@@ -92,9 +92,11 @@ public:
        }
      }
 
+
      if(p > overtake_freq){ // no overtaking
        velocity[1]= max_xvel;
        velocity[0]= 0;
+       cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
      }
     else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
 
@@ -123,7 +125,10 @@ public:
         velocity[1] = max_xvel;
         velocity[0]=0;
       }
+      if(to_overtake)cout<<"Overtaking by "<<type<<endl;
+      else cout<<"NO overtaking "<<type<<endl;
 
+      cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
     }
 
   // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
@@ -217,7 +222,16 @@ void printRoad(Road* rd){
   }
   cout<<endl;
 }
-
+void updateRoad(Road* road, int t){
+  if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
+  else{
+    for(int i=0;i<t;i++){
+      updateRoad(road);
+      printRoad(road);
+      cout<<endl;
+    }
+  }
+}
 
 int main(int argc, char** argv){
   Road road;
@@ -259,36 +273,9 @@ int main(int argc, char** argv){
 
 updatePositionsOnRoad(&road);
 printRoad(&road);
-cout<<endl;
+cout<<endl;//initial condition upon definition
 
-updateRoad(&road);
-printRoad(&road);
-cout<<endl;
+updateRoad(&road,5);
 
-
-updateRoad(&road);
-printRoad(&road);
-cout<<endl;
-
-
-updateRoad(&road);
-printRoad(&road);
-cout<<endl;
-
-
-
-updateRoad(&road);
-printRoad(&road);
-cout<<endl;
-
-
-updateRoad(&road);
-printRoad(&road);
-cout<<endl;
-
-  updateRoad(&road);
-  printRoad(&road);
-  cout<<endl;
-  cout<<road.vehicles.size()<<endl;
 
 }
