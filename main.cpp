@@ -81,28 +81,32 @@ public:
 
      for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
          for(int j = 1; j <= max_xvel ; j++){
-            if(on_road.road_matrix[i+pos[0]][j+pos[1]] == true){
 
-              max_xvel = j-1;
-              continue;
-            }
+          if( i+pos[0]<width && j+pos[1]<length){
+              if(on_road.road_matrix[i+pos[0]][j+pos[1]] == true){
+                max_xvel = j-1;
+                continue;
+              }
          }
+       }
      }
 
      if(p > overtake_freq){ // no overtaking
        velocity[1]= max_xvel;
        velocity[0]= 0;
-
      }
     else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
+
       bool to_overtake = true;
-      if(pos[1]+overtake_vertical_speed<on_road.width && pos[1]+overtake_vertical_speed>=0){
+      if(pos[0]+overtake_vertical_speed+length<=on_road.width && pos[0]+overtake_vertical_speed>=0){
        for(int i = 1;i<=overtake_horizontal_speed;i++){
           for(int j =1; j<=overtake_vertical_speed;j++){
-            if(on_road.road_matrix[j+pos[0]][pos[1]+i]==true){
-              to_overtake = false;
-              break;
-            }
+             if(pos[1]+i<on_road.length){
+                if(on_road.road_matrix[j+pos[0]][pos[1]+i]==true){
+                  to_overtake = false;
+                  break;
+                }
+             }
           }
 
           if(to_overtake==false)break;
@@ -121,7 +125,7 @@ public:
 
     }
 
-  //   cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
+  // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
   }
 
   void changePosition(){// changing position in unit times
@@ -158,9 +162,11 @@ void updateRoad(Road* rd){//function to update road matrix
 
     for(int i = 0;i<(iter->second)->width;i++){
       for(int j = 0;j<(iter->second)->length;j++){
-        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd->length){
+
+        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<rd->length){
           rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
         }
+
       }
     }
     if((iter->second)->pos[1]-(iter->second)->length+1>=rd->length){
@@ -234,8 +240,8 @@ int main(int argc, char** argv){
   bike.color = "red";
   bike.length = 3;
   bike.width = 1;
-  bike.pos[0]=3;
-  bike.pos[1]=0;
+  bike.pos[0]=0;
+  bike.pos[1]=3;
   bike.on_road = road;
   road.vehicles.insert(std::pair<int,Vehicle*>(bike.id,&bike));
 
