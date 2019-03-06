@@ -10,13 +10,13 @@ Axes:- Right -> Positive,
 references- https://www.geeksforgeeks.org/stdany-class-in-c/
 https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 */
-#include<any>
-#include<cstring>
-#include<string>
+#include <any>
+#include <cstring>
+#include <string>
 #include <iostream>
-#include<map>
-#include<vector>
-#include<random>
+#include <map>
+#include <vector>
+#include <random>
 using namespace std;
 
 std::random_device random_gen;
