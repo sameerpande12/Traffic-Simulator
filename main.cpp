@@ -36,7 +36,7 @@ public:
   bool** road_matrix;
   map<int,Vehicle> vehicles;
 };
-
+void printRoad(Road rd);
 class Vehicle{
 public:
 
@@ -46,49 +46,59 @@ public:
   string color;
   int length;
   int width;
-
+  Road on_road;//road on which vehicle is moving
 
   //movement parameters
   int max_xspeed = 3;
   int max_acceleration = 1;
   float lane_change_freq = 0.3;
-  float overtake_freq = 0.1;
+  float overtake_freq = 0;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
   //overtaking done only from right side of vehicle to be overtaken
-  bool changing_lane = false;
+  //bool changing_lane = false;
+
+
   /*probability of overtaking given overtaking is possible*/
   /*we define overtaking is possible when a smaller vehicle can shift to a lane(s) on which no trace of the vehicle to be overtaken is found*/
   /*for time being assume instantaneous breaking is possible:- Scenario is almost true for indian drivers xD*/
 
   int velocity[2]={0,0};//velocity[0] is x_velocity and velocity[1] is y_velocity
-  int lane_no;//represents lane on which top right corner of vehicle is
-  Road on_road;//road on which vehicle is moving
+  //int lane_no;//represents lane on which top right corner of vehicle is
+
   int pos[2] = {0,0};
 
-  bool** road_matrix = on_road.road_matrix;
+  //bool** road_matrix = on_road.road_matrix;
 
   void changeVelocity(){/*lane changing and overtaking not yet coded */
+  //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
      float p = getRandom();
-     int max_xvel = velocity[0]+max_acceleration;
+
+     int max_xvel = velocity[1]+max_acceleration;
+
+     if(max_xvel > max_xspeed)max_xvel = max_xspeed;
+
      for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
          for(int j = 1; j <= max_xvel ; j++){
-            if(road_matrix[i+pos[0]][j+pos[1]] == true){
+            if(on_road.road_matrix[i+pos[0]][j+pos[1]] == true){
+
               max_xvel = j-1;
               continue;
             }
          }
      }
+
      if(p > overtake_freq){ // no overtaking
        velocity[1]= max_xvel;
        velocity[0]= 0;
-    }
+
+     }
     else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
       bool to_overtake = true;
       if(pos[1]+overtake_vertical_speed<on_road.width && pos[1]+overtake_vertical_speed>=0){
        for(int i = 1;i<=overtake_horizontal_speed;i++){
           for(int j =1; j<=overtake_vertical_speed;j++){
-            if(road_matrix[j+pos[0]][pos[1]+i]==true){
+            if(on_road.road_matrix[j+pos[0]][pos[1]+i]==true){
               to_overtake = false;
               break;
             }
@@ -110,27 +120,41 @@ public:
 
     }
 
+  //   cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
   }
 
   void changePosition(){// changing position in unit times
+  //cout<<"entering changePosition"<<velocity[1]<<" "<<velocity[0]<<endl;
    pos[0] = pos[0]  + velocity[0];
    pos[1] = pos[1]  + velocity[1];
+   //cout<<"leaving changePosition: "<<endl;
   }
 };
 
 void updateRoad(Road rd){//function to update road matrix
+  //cout<<"entering updateRoad"<<endl;
   map<int,Vehicle> vehicles = rd.vehicles;
+  map<int,Vehicle>::iterator iter = vehicles.begin();
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++){
+  //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
+    iter->second.changeVelocity();
+  //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
+  }
+
+
+
+  std::vector<int> ids_to_remove;
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++)iter->second.changePosition();
+  iter = vehicles.begin();
+
+
   for(int i = 0;i<rd.width;i++)
    for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
 
-  map<int,Vehicle>::iterator iter = vehicles.begin();
-  for(iter = vehicles.begin();iter!=vehicles.end();iter++)iter->second.changeVelocity();
 
-  iter = vehicles.begin();
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++)
+  {
 
-  std::vector<int> ids_to_remove;
-  for(iter = vehicles.begin();iter!=vehicles.end();iter++){
-    iter->second.changePosition();
     for(int i = 0;i<iter->second.width;i++){
       for(int j = 0;j<iter->second.length;j++){
         if(iter->second.pos[1]>=j && iter->second.pos[1]-j<=rd.length){
@@ -143,14 +167,75 @@ void updateRoad(Road rd){//function to update road matrix
     }
   }
 
+
+
   vector<int>::iterator vec_iter = ids_to_remove.begin();
   for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
     vehicles.erase(*vec_iter);
+    cout<<"REMOVING"<<endl;
   }
+//  cout<<"leaving UpdateRoad"<<endl;
   //updates the road by one unit time
 }
 
+void updatePositionsOnRoad(Road rd){
+  for(int i = 0;i<rd.width;i++)
+   for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
+
+   map<int,Vehicle> vehicles = rd.vehicles;
+   map<int,Vehicle>::iterator iter = vehicles.begin();
+
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++)
+  {
+
+    for(int i = 0;i<iter->second.width;i++){
+      for(int j = 0;j<iter->second.length;j++){
+        if(iter->second.pos[1]>=j && iter->second.pos[1]-j<=rd.length){
+          rd.road_matrix[i+iter->second.pos[0]][iter->second.pos[1]-j]=true;
+        }
+      }
+    }
+  }
+}
+void printRoad(Road rd){
+  for(int i= 0;i<rd.width;i++){
+    for(int j =0;j<rd.length;j++)
+     cout<<rd.road_matrix[i][j]<<" ";
+     cout<<endl;
+  }
+}
+
+
 int main(int argc, char** argv){
+  Road road;
+  int rlen = 10;
+  int rwid = 5;
+  road.length = rlen;
+  road.width = rwid;
+  road.id = 1;
+  bool** road_matrix = new bool*[rwid];
+  for(int i = 0;i<rwid;i++)road_matrix[i]=new bool[rlen];
+
+  road.road_matrix = road_matrix;
+
+
+
+  Vehicle mycar;
+  mycar.id = 1;
+  mycar.type = "car";
+  mycar.color = "red";
+  mycar.length = 2;
+  mycar.width = 2;
+  mycar.on_road = road;
+  road.vehicles.insert(std::pair<int,Vehicle>(mycar.id,mycar));
+
+  updatePositionsOnRoad(road);
+  printRoad(road);
+  cout<<endl;
+
+  updateRoad(road);
+  printRoad(road);
+  cout<<endl;
 
 
 }
