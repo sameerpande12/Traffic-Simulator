@@ -33,7 +33,7 @@ public:
   int id;//
   int length;//
   int width;// make them of type final
-  bool** road_matrix;
+  char** road_matrix;
   map<int,Vehicle*> vehicles;
   int sam=100;
 };
@@ -47,6 +47,7 @@ public:
   string color;
   int length;
   int width;
+  char symbol;
   Road on_road;//road on which vehicle is moving
 
   //movement parameters
@@ -83,7 +84,7 @@ public:
          for(int j = 1; j <= max_xvel ; j++){
 
           if( i+pos[0]<width && j+pos[1]<length){
-              if(on_road.road_matrix[i+pos[0]][j+pos[1]] == true){
+              if(on_road.road_matrix[i+pos[0]][j+pos[1]] != ' '){
                 max_xvel = j-1;
                 continue;
               }
@@ -102,7 +103,7 @@ public:
        for(int i = 1;i<=overtake_horizontal_speed;i++){
           for(int j =1; j<=overtake_vertical_speed;j++){
              if(pos[1]+i<on_road.length){
-                if(on_road.road_matrix[j+pos[0]][pos[1]+i]==true){
+                if(on_road.road_matrix[j+pos[0]][pos[1]+i]!=' '){
                   to_overtake = false;
                   break;
                 }
@@ -154,7 +155,7 @@ void updateRoad(Road* rd){//function to update road matrix
 
 
   for(int i = 0;i<rd->width;i++)
-   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=false;
+   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
 
   for(iter = rd->vehicles.begin();iter!=rd->vehicles.end();iter++)
@@ -164,7 +165,7 @@ void updateRoad(Road* rd){//function to update road matrix
       for(int j = 0;j<(iter->second)->length;j++){
 
         if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<rd->length){
-          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
+          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=iter->second->symbol;
         }
 
       }
@@ -187,7 +188,7 @@ void updateRoad(Road* rd){//function to update road matrix
 
 void updatePositionsOnRoad(Road* rd){
   for(int i = 0;i<rd->width;i++)
-   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=false;
+   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
    map<int,Vehicle*> vehicles = rd->vehicles;
    map<int,Vehicle*>::iterator iter = vehicles.begin();
@@ -198,18 +199,23 @@ void updatePositionsOnRoad(Road* rd){
     for(int i = 0;i<(iter->second)->width;i++){
       for(int j = 0;j<(iter->second)->length;j++){
         if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd->length){
-          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
+          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=iter->second->symbol;
         }
       }
     }
   }
 }
 void printRoad(Road* rd){
+  for(int i = 0;i<2*rd->length;i++)cout<<"-";
+  cout<<endl;
   for(int i= 0;i<rd->width;i++){
-    for(int j =0;j<rd->length;j++)
-     cout<<rd->road_matrix[i][j]<<" ";
-     cout<<endl;
+    cout<<"|";
+    for(int j =0;j<rd->length;j++)cout<<rd->road_matrix[i][j]<<"|";
+    cout<<endl;
+    for(int j =0;j<2*rd->length;j++)cout<<"-";
+    cout<<endl;
   }
+  cout<<endl;
 }
 
 
@@ -220,8 +226,11 @@ int main(int argc, char** argv){
   road.length = rlen;
   road.width = rwid;
   road.id = 1;
-  bool** road_matrix = new bool*[rwid];
-  for(int i = 0;i<rwid;i++)road_matrix[i]=new bool[rlen];
+  char** road_matrix = new char*[rwid];
+  for(int i = 0;i<rwid;i++){
+    road_matrix[i]=new char[rlen];
+   for(int j = 0;j<rlen;j++)road_matrix[i][j]=' ';
+  }
 
   road.road_matrix = road_matrix;
 
@@ -232,6 +241,7 @@ int main(int argc, char** argv){
   mycar.length = 2;
   mycar.width = 2;
   mycar.on_road = road;
+  mycar.symbol='c';
   road.vehicles.insert(std::pair<int,Vehicle*>(mycar.id,&mycar));
 
   Vehicle bike;
@@ -243,6 +253,7 @@ int main(int argc, char** argv){
   bike.pos[0]=0;
   bike.pos[1]=3;
   bike.on_road = road;
+  bike.symbol = 'b';
   road.vehicles.insert(std::pair<int,Vehicle*>(bike.id,&bike));
 
 
