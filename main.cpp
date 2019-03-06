@@ -35,6 +35,7 @@ public:
   int width;// make them of type final
   bool** road_matrix;
   map<int,Vehicle*> vehicles;
+  int sam=100;
 };
 void printRoad(Road rd);
 class Vehicle{
@@ -131,11 +132,11 @@ public:
   }
 };
 
-void updateRoad(Road rd){//function to update road matrix
+void updateRoad(Road* rd){//function to update road matrix
   //cout<<"entering updateRoad"<<endl;
 
-  map<int,Vehicle*>::iterator iter = rd.vehicles.begin();
-  for(iter = rd.vehicles.begin();iter!=rd.vehicles.end();iter++){
+  map<int,Vehicle*>::iterator iter = rd->vehicles.begin();
+  for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++){
   //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
     (iter->second)->changeVelocity();
   //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
@@ -144,25 +145,25 @@ void updateRoad(Road rd){//function to update road matrix
 
 
   std::vector<int> ids_to_remove;
-  for(iter = rd.vehicles.begin();iter!=rd.vehicles.end();iter++)(iter->second)->changePosition();
-  iter = rd.vehicles.begin();
+  for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++)(iter->second)->changePosition();
+  iter = rd->vehicles.begin();
 
 
-  for(int i = 0;i<rd.width;i++)
-   for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
+  for(int i = 0;i<rd->width;i++)
+   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=false;
 
 
-  for(iter = rd.vehicles.begin();iter!=rd.vehicles.end();iter++)
+  for(iter = rd->vehicles.begin();iter!=rd->vehicles.end();iter++)
   {
 
     for(int i = 0;i<(iter->second)->width;i++){
       for(int j = 0;j<(iter->second)->length;j++){
-        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd.length){
-          rd.road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
+        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd->length){
+          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
         }
       }
     }
-    if((iter->second)->pos[1]-(iter->second)->length+1>=rd.length){
+    if((iter->second)->pos[1]-(iter->second)->length+1>=rd->length){
          ids_to_remove.push_back(iter->first);
     }
   }
@@ -171,18 +172,18 @@ void updateRoad(Road rd){//function to update road matrix
 
   vector<int>::iterator vec_iter = ids_to_remove.begin();
   for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
-    rd.vehicles.erase(*vec_iter);
+    rd->vehicles.erase(*vec_iter);
     cout<<"REMOVING:"<<*vec_iter<<endl;
   }
 //  cout<<"leaving UpdateRoad"<<endl;
   //updates the road by one unit time
 }
 
-void updatePositionsOnRoad(Road rd){
-  for(int i = 0;i<rd.width;i++)
-   for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
+void updatePositionsOnRoad(Road* rd){
+  for(int i = 0;i<rd->width;i++)
+   for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=false;
 
-   map<int,Vehicle*> vehicles = rd.vehicles;
+   map<int,Vehicle*> vehicles = rd->vehicles;
    map<int,Vehicle*>::iterator iter = vehicles.begin();
 
   for(iter = vehicles.begin();iter!=vehicles.end();iter++)
@@ -190,17 +191,17 @@ void updatePositionsOnRoad(Road rd){
 
     for(int i = 0;i<(iter->second)->width;i++){
       for(int j = 0;j<(iter->second)->length;j++){
-        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd.length){
-          rd.road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
+        if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<=rd->length){
+          rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=true;
         }
       }
     }
   }
 }
-void printRoad(Road rd){
-  for(int i= 0;i<rd.width;i++){
-    for(int j =0;j<rd.length;j++)
-     cout<<rd.road_matrix[i][j]<<" ";
+void printRoad(Road* rd){
+  for(int i= 0;i<rd->width;i++){
+    for(int j =0;j<rd->length;j++)
+     cout<<rd->road_matrix[i][j]<<" ";
      cout<<endl;
   }
 }
@@ -239,37 +240,38 @@ int main(int argc, char** argv){
   road.vehicles.insert(std::pair<int,Vehicle*>(bike.id,&bike));
 
 
-  updatePositionsOnRoad(road);
-  printRoad(road);
+updatePositionsOnRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+updateRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+
+updateRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+
+updateRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+
+
+updateRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+
+updateRoad(&road);
+printRoad(&road);
+cout<<endl;
+
+  updateRoad(&road);
+  printRoad(&road);
   cout<<endl;
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
-
-
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
-  updateRoad(road);
-  printRoad(road);
-  cout<<endl;
-
   cout<<road.vehicles.size()<<endl;
+
 }
