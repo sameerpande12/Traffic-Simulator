@@ -8,6 +8,7 @@ Axes:- Right -> Positive,
 1,0     1,1       1,2
 -----------------------
 references- https://www.geeksforgeeks.org/stdany-class-in-c/
+https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 */
 #include<any>
 #include<cstring>
@@ -15,17 +16,26 @@ references- https://www.geeksforgeeks.org/stdany-class-in-c/
 #include <iostream>
 #include<map>
 #include<vector>
+#include<random>
 using namespace std;
 
-float getRandom();//returns a float between 0 to 1 in uniform distribution
+std::random_device random_gen;
+std::mt19937 gen(random_gen());
+std::uniform_real_distribution<>dis(0.0,1.0);
 
+
+float getRandom(){
+  return (float) dis(gen);
+};//returns a float between 0 to 1 in uniform distribution
+class Vehicle;
 class Road{
+public:
   int id;//
   int length;//
   int width;// make them of type final
   bool** road_matrix;
   map<int,Vehicle> vehicles;
-}
+};
 
 class Vehicle{
 public:
@@ -60,17 +70,16 @@ public:
 
   void changeVelocity(){/*lane changing and overtaking not yet coded */
      float p = getRandom();
-     if(p > overtake_freq){ // no overtaking
-
-        int max_xvel = velocity[0]+max_acceleration;
-        for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
-            for(int j = 1; j <= max_xvel ; j++){
-               if(road_matrix[i+pos[0]][j+pos[1]] == true){
-                 max_xvel = j-1;
-                 continue;
-               }
+     int max_xvel = velocity[0]+max_acceleration;
+     for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
+         for(int j = 1; j <= max_xvel ; j++){
+            if(road_matrix[i+pos[0]][j+pos[1]] == true){
+              max_xvel = j-1;
+              continue;
             }
-        }
+         }
+     }
+     if(p > overtake_freq){ // no overtaking
        velocity[1]= max_xvel;
        velocity[0]= 0;
     }
@@ -106,7 +115,7 @@ public:
    pos[0] = pos[0]  + velocity[0];
    pos[1] = pos[1]  + velocity[1];
   }
-}
+};
 
 void updateRoad(Road rd){//function to update road matrix
   map<int,Vehicle> vehicles = rd.vehicles;
@@ -114,33 +123,33 @@ void updateRoad(Road rd){//function to update road matrix
    for(int j = 0;j<rd.length;j++)rd.road_matrix[i][j]=false;
 
   map<int,Vehicle>::iterator iter = vehicles.begin();
-  for(iter = vehicles.begin();iter<vehicles.end();iter++)iter->second.changeVelocity();
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++)iter->second.changeVelocity();
 
   iter = vehicles.begin();
 
   std::vector<int> ids_to_remove;
-  for(iter = vehicles.begin();iter<vehicles.end();iter++){
+  for(iter = vehicles.begin();iter!=vehicles.end();iter++){
     iter->second.changePosition();
     for(int i = 0;i<iter->second.width;i++){
       for(int j = 0;j<iter->second.length;j++){
-        if(iter->second.position[1]>=j && iter->second.position[1]-j<=rd.length){
-          rd.road_matrix[i+iter->second.position[0]][iter->second.position[1]-j]=true;
+        if(iter->second.pos[1]>=j && iter->second.pos[1]-j<=rd.length){
+          rd.road_matrix[i+iter->second.pos[0]][iter->second.pos[1]-j]=true;
         }
       }
     }
-    if(iter->second.position[1]-iter->second.length+1>=rd.length){
+    if(iter->second.pos[1]-iter->second.length+1>=rd.length){
          ids_to_remove.push_back(iter->first);
     }
   }
 
-  Vector<int>::iterator vec_iter = ids_to_remove.begin();
+  vector<int>::iterator vec_iter = ids_to_remove.begin();
   for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
     vehicles.erase(*vec_iter);
   }
   //updates the road by one unit time
 }
 
-int main(char** argc, int argv){
+int main(int argc, char** argv){
 
 
 }
