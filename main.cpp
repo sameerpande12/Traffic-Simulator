@@ -54,7 +54,7 @@ public:
   int max_xspeed = 3;
   int max_acceleration = 1;
   float lane_change_freq = 0.3;
-  float overtake_freq = 0.5;
+  float overtake_freq = 0.4;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
   //overtaking done only from right side of vehicle to be overtaken
@@ -99,21 +99,39 @@ public:
        cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
      }
     else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
-
+     //vehicle will plan to overtake if at current time there is no vehicle that could with max_xspeed  cause a collision
       bool to_overtake = true;
       if(pos[0]+overtake_vertical_speed+length<=on_road.width && pos[0]+overtake_vertical_speed>=0){
-       for(int i = 1;i<=overtake_horizontal_speed;i++){
-          for(int j =1; j<=overtake_vertical_speed;j++){
-             if(pos[1]+i<on_road.length){
-                if(on_road.road_matrix[j+pos[0]][pos[1]+i]!=' '){
-                  to_overtake = false;
-                  break;
-                }
-             }
-          }
+         for(int i = 1;i<=overtake_horizontal_speed;i++){
+            for(int j =1; j<=overtake_vertical_speed;j++){
+               if(pos[1]+i<on_road.length){
+                  if(on_road.road_matrix[j+pos[0]][pos[1]+i]!=' '){
+                    to_overtake = false;
+                    break;
+                  }
 
-          if(to_overtake==false)break;
-       }
+               }
+            }
+
+            if(to_overtake==false)break;
+         }
+
+         if(to_overtake){//checks if any other vehicle could crash into it assuming the max_xspeed of current vehicle
+
+             // pos[0]+overtake_vertical_speed   to pos[0]+overtake_vertical_speed + width-1
+             for(int i = pos[0]+overtake_vertical_speed; i< pos[0]+overtake_vertical_speed+width;i++){
+               for(int j = 1;j<=max_xspeed;j++){
+                 if(pos[1]-length+1+overtake_horizontal_speed-max_xspeed>=0 && pos[1]-length+1+overtake_horizontal_speed - max_xspeed < on_road.length){
+                    if(on_road.road_matrix[i][pos[1]-length+1+overtake_horizontal_speed - max_xspeed]!=' '){
+                      to_overtake = false;
+                      break;
+                    }
+                  }
+               }
+               if(to_overtake==false)break;
+             }
+
+         }
       }
       else to_overtake = false;
 
@@ -235,7 +253,7 @@ void updateRoad(Road* road, int t){
 
 int main(int argc, char** argv){
   Road road;
-  int rlen = 10;
+  int rlen = 15;
   int rwid = 5;
   road.length = rlen;
   road.width = rwid;
