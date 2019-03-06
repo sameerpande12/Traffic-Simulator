@@ -23,6 +23,7 @@ std::random_device random_gen;
 std::mt19937 gen(random_gen());
 std::uniform_real_distribution<>dis(0.0,1.0);
 
+int present_time;
 
 float getRandom(){
   return (float) dis(gen);
@@ -34,11 +35,13 @@ public:
   int length;//
   int width;// make them of type final
   char** road_matrix;
+  int signal_pos;
+  char* signal_color = new char[0];
   map<int,Vehicle*> vehicles;
   map<char,Vehicle*> symbol_maps;
 
 };
-void printRoad(Road rd);
+void printRoad(Road* rd);
 class Vehicle{
 public:
 
@@ -76,15 +79,24 @@ public:
   void changeVelocity(){/*lane changing and overtaking not yet coded */
   //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
      float p = getRandom();
-
+     if( *(on_road.signal_color) == 'R'){
+        p = 1;// to ensure no overtaking takes place when signal is red
+     }
      int max_xvel = velocity[1]+max_acceleration;
 
      if(max_xvel > max_xspeed)max_xvel = max_xspeed;
 
      for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
          for(int j = 1; j <= max_xvel ; j++){
+          if(j+pos[1]< on_road.length){/*i+pos[0]< on_road.width -> this part must be true*/
 
-          if( /*i+pos[0]< on_road.width -> this part must be true*/  j+pos[1]< on_road.length){
+              if(j+pos[1]>= on_road.signal_pos && *(on_road.signal_color) == 'R' && pos[1]<on_road.signal_pos){
+                max_xvel = j-1;
+        //        cout<<"WAITING "<<type<<" "<<endl;
+
+                continue;
+              }
+
               if(on_road.road_matrix[i+pos[0]][j+pos[1]] != ' '){
                 max_xvel = j-1;
                 continue;
@@ -97,7 +109,7 @@ public:
      if(p > overtake_freq){ // no overtaking
        velocity[1]= max_xvel;
        velocity[0]= 0;
-       cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
+       //cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
      }
     else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
      //vehicle will plan to overtake if at current time there is no vehicle that could with max_xspeed  cause a collision
@@ -171,10 +183,10 @@ public:
         velocity[1] = max_xvel;
         velocity[0]=0;
       }
-      if(to_overtake)cout<<"Overtaking by "<<type<<endl;
-      else cout<<"NO overtaking "<<type<<endl;
+    //  if(to_overtake)cout<<"Overtaking by "<<type<<endl;
+    //    else cout<<"NO overtaking "<<type<<endl;
 
-      cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
+    //  cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
     }
 
   // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
@@ -191,7 +203,15 @@ public:
 
 void updateRoad(Road* rd){//function to update road matrix
   //cout<<"entering updateRoad"<<endl;
-
+  if(present_time %8 < 4){
+    *(rd->signal_color) = 'R';
+  }
+  else if(present_time%8==5){
+    *(rd->signal_color) = 'Y';
+  }
+  else{
+    *(rd->signal_color) = 'G';
+  }
   map<int,Vehicle*>::iterator iter = rd->vehicles.begin();
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++){
   //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
@@ -245,6 +265,7 @@ void updateRoad(Road* rd){//function to update road matrix
   }
 //  cout<<"leaving UpdateRoad"<<endl;
   //updates the road by one unit time
+  present_time++;
 }
 
 void updatePositionsOnRoad(Road* rd){
@@ -265,14 +286,19 @@ void updatePositionsOnRoad(Road* rd){
       }
     }
   }
+ // no change in time. Just to initialize the roadMatrix.
 }
 
 void printRoad(Road* rd){
+  cout<<"Signal Color:"<<rd->signal_color<<endl;
   for(int i = 0;i<2*rd->length;i++)cout<<"-";
   cout<<endl;
   for(int i= 0;i<rd->width;i++){
-    cout<<"|";
-    for(int j =0;j<rd->length;j++)cout<<rd->road_matrix[i][j]<<"|";
+
+    for(int j =0;j<rd->length;j++){
+      cout<<rd->road_matrix[i][j];
+      if(j==rd->signal_pos)cout<<"|";else cout<<" ";
+    }
     cout<<endl;
     for(int j =0;j<2*rd->length;j++)cout<<"-";
     cout<<endl;
@@ -285,20 +311,25 @@ void updateRoad(Road* road, int t){
   if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
   else{
     for(int i=0;i<t;i++){
+
       updateRoad(road);
       printRoad(road);
       cout<<endl;
     }
+
   }
+
 }
 
 int main(int argc, char** argv){
+  present_time = 1;
   Road road;
   int rlen = 15;
   int rwid = 5;
   road.length = rlen;
   road.width = rwid;
   road.id = 1;
+  road.signal_pos = 10;
   char** road_matrix = new char*[rwid];
   for(int i = 0;i<rwid;i++){
     road_matrix[i]=new char[rlen];
@@ -337,6 +368,9 @@ int main(int argc, char** argv){
   cout<<endl;//initial condition upon definition
 
   updateRoad(&road,15);
+
+  //printRoad(&road);
+//  printRoad(&bike.on_road);
 
 
 }
