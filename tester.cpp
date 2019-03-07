@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <GLFW/glfw3.h>
 #include <math.h>
+#include <iostream>
 //include <glad/glad.h> 
 #define GL_SILENCE_DEPRECATION
 //#include <GLUT/glm.hpp>
@@ -13,16 +14,59 @@
    whenever the window needs to be re-painted. */
 int CurrentWidth = 640,
     CurrentHeight = 640;
+float **graphic_road;
+char **road; // we need to make this the char array which takes in input from the simulator
 float angle = 0.0f;
 float red=1.0f;
 float green=1.0f;
 float blue =1.0f;
-float xc=10.0, zc=10.0;
+float xc=15.0, zc=15.0;
 // actual vector representing the camera's direction
 float lx=0.0f,lz=-1.0f;
 // XZ position of the camera
-float x=0.0f,z=5.0f;
-float y=1.0f;
+float x=0.0f,z=0.0f;
+float y=18.0f;
+int plot_convert(char **road, int width, int length)
+{
+   int size=0;
+   for(int i=0;i<length;++i)
+   {
+      for(int j=0;j<width;++j)
+      {
+         if (road[i][j]=='b'|road[i][j]=='c')
+         {
+            size++;
+
+         }
+         
+      }
+   }
+   //int size=(length)*(width)/2;
+   graphic_road=new float*[size+1];
+   for(int i=0;i<size;i++)
+   {
+      graphic_road[i]=new float[2];
+   }
+   int cur_leng=0;
+   for(int i=0;i<length;++i)
+   {
+      for(int j=0;j<width;++j)
+      {
+         if (road[i][j]=='b'|road[i][j]=='c')
+         {
+            graphic_road[cur_leng][0]=-(float)i-1;
+            graphic_road[cur_leng][1]=-(float)j-2;
+            cur_leng++;
+
+         }
+         
+      }
+   }
+  
+
+   return cur_leng;
+
+}
 void changeSize(int w, int h) {
 
    // Prevent a divide by zero, when window is too short
@@ -97,9 +141,9 @@ void renderScene(void) {
    // Reset transformations
    glLoadIdentity();
    // Set the camera
-  gluLookAt(   xc, y, zc,
-         xc+lx, 1,  zc+lz,
-         0.0f, 1.0f+y,  0.0f);
+  gluLookAt(   xc+x, y, zc+z,
+         -100.0f+10*lx, 0.0f,  -100.0f+10*lz,
+         0.0f, 3.0f,  0.0f);
 
 
         // Draw ground
@@ -112,13 +156,51 @@ void renderScene(void) {
    glEnd();
 
         // Draw 36 SnowMen
-   for(int i = -3; i < 3; i++)
-      for(int j=-3; j < 3; j++) {
+   
+
+   int w=10;
+   
+   int l=3;
+   road=new char*[l];
+   for(int i=0;i<l;++i)
+   {
+      road[i]=new char[w];
+      road[i]="b--g--c---";
+   }
+   road[2]="---c------";
+
+   int n;
+   n=plot_convert(road,w,l);
+   //graphic_road=new float*[5];
+  /*for(int i=0;i<5;i++)
+   {
+      graphic_road[i]=new float[2];
+      graphic_road[i][0]=-(i+0.5);
+      graphic_road[i][1]=-(i+1.0);
+   }*/
+   //*n=5;
+   //for(int i=0;i<*n;++i)
+   //{
+   //std::cout<<"WHYYYYYY"<<std::endl;
+   //std::cout<<n<<std::endl;
+   if(n!=0)
+      //std::cout<<graphic_road[0][0]<<"\t";
+   //}
+   for(int i=0; i<3;++i)
+   {
+      glPushMatrix();
+      glTranslatef((graphic_road[i][0]-i)*10.0,0,(graphic_road[i][1]-i) * 15.0);
+      drawSnowMan();
+      glPopMatrix();
+   }
+
+   /*for(int i = -5; i < 1; i++)
+      for(int j=-5; j < 1; j++) {
          glPushMatrix();
          glTranslatef(i*10.0,0,j * 10.0);
          drawSnowMan();
          glPopMatrix();
-      }
+      }*/
 
    glutSwapBuffers();
 }
@@ -172,7 +254,7 @@ int main(int argc, char **argv) {
    glutInitWindowPosition(100,100);
    glutInitWindowSize(800,800);
    glutCreateWindow("Lighthouse3D- GLUT Tutorial");
-
+   //std::cout<<"HERERERERE"<<std::endl;
    // register callbacks
    glutDisplayFunc(renderScene);
    glutReshapeFunc(changeSize);
@@ -187,7 +269,7 @@ int main(int argc, char **argv) {
    glutMainLoop();
 
    // enter GLUT event processing cycle
-   glutMainLoop();
+  // glutMainLoop();
 
    return 1;
 }
