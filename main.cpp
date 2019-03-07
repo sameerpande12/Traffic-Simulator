@@ -18,6 +18,8 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <vector>
 #include <random>
 #include <queue>
+#include <fstream>
+#include <sstream>
 using namespace std;
 
 std::random_device random_gen;
@@ -457,9 +459,47 @@ Vehicle createVehicle( string type, string color , int length, int width, char s
   return newVehicle;
 }
 
+int main(int argc, char** argv)
+{
+  if(argc!=2)
+  {
+    cout<<"Error: no config file passed"<<endl;
+    return -1;
+  }
+  ifstream file(argv[1]);
+  std::stringstream buffer;
+  if ( file )
+  {
+        buffer << file.rdbuf();
+        file.close();
+  }
+  
+        std::vector<std::string> result;
+        //std::stringstream stream(string);
+        std::string word;
+        while (std::getline(buffer, word, '\n'))
+        {
+            size_t found = word.find("#"); 
+            if(word.length()==0)
+              {
+                result.push_back(word);
+                continue;
+              }
+            if (found != string::npos) 
+                word=word.substr(0,found);
+            if(word.length()>0)
+              result.push_back(word);
+        }
+     auto k=result.begin();
+     for(;k!=result.end();k++)
+     {
+      cout<<*k<<endl;
+     }  
 
+  return 0;
+}
 
-int main(int argc, char** argv){
+/*int main(int argc, char** argv){
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
 
@@ -504,4 +544,4 @@ int main(int argc, char** argv){
 
   updateRoad(&road,4,true);
 
-}
+}*/
