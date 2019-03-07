@@ -24,7 +24,7 @@ std::mt19937 gen(random_gen());
 std::uniform_real_distribution<>dis(0.0,1.0);
 
 int present_time;
-
+int vehicle_id;
 float getRandom(){
   return (float) dis(gen);
 };//returns a float between 0 to 1 in uniform distribution
@@ -32,8 +32,8 @@ class Vehicle;
 class Road{
 public:
   int id;//
-  int length;//
-  int width;// make them of type final
+  int length=1;//
+  int width=1;// make them of type final
   char** road_matrix;
   int signal_pos;
   char* signal_color = new char[0];
@@ -58,7 +58,7 @@ public:
   int max_xspeed = 3;
   int max_acceleration = 1;
   float lane_change_freq = 0.3;
-  float overtake_freq = 0.4;
+  float overtake_freq = 0;
   int overtake_horizontal_speed = 1;
   int overtake_vertical_speed = 1;
   //overtaking done only from right side of vehicle to be overtaken
@@ -203,15 +203,6 @@ public:
 
 void updateRoad(Road* rd){//function to update road matrix
   //cout<<"entering updateRoad"<<endl;
-  if(present_time %8 < 4){
-    *(rd->signal_color) = 'R';
-  }
-  else if(present_time%8==5){
-    *(rd->signal_color) = 'Y';
-  }
-  else{
-    *(rd->signal_color) = 'G';
-  }
   map<int,Vehicle*>::iterator iter = rd->vehicles.begin();
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++){
   //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
@@ -266,9 +257,30 @@ void updateRoad(Road* rd){//function to update road matrix
 //  cout<<"leaving UpdateRoad"<<endl;
   //updates the road by one unit time
   present_time++;
+
+  if(present_time %8 < 4){
+    *(rd->signal_color) = 'R';
+  }
+  else if(present_time%8==5){
+    *(rd->signal_color) = 'Y';
+  }
+  else{
+    *(rd->signal_color) = 'G';
+  }
 }
 
 void updatePositionsOnRoad(Road* rd){
+
+  if(present_time %8 < 4){
+    *(rd->signal_color) = 'R';
+  }
+  else if(present_time%8==5){
+    *(rd->signal_color) = 'Y';
+  }
+  else{
+    *(rd->signal_color) = 'G';
+  }
+
   for(int i = 0;i<rd->width;i++)
    for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
@@ -297,7 +309,7 @@ void printRoad(Road* rd){
 
     for(int j =0;j<rd->length;j++){
       cout<<rd->road_matrix[i][j];
-      if(j==rd->signal_pos)cout<<"|";else cout<<" ";
+      if(j+1==rd->signal_pos)cout<<"|";else cout<<" ";
     }
     cout<<endl;
     for(int j =0;j<2*rd->length;j++)cout<<"-";
@@ -308,60 +320,59 @@ void printRoad(Road* rd){
 
 
 void updateRoad(Road* road, int t){
-  if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
-  else{
-    for(int i=0;i<t;i++){
+    if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
+    else{
+      for(int i=0;i<t;i++){
 
-      updateRoad(road);
-      printRoad(road);
-      cout<<endl;
+        updateRoad(road);
+        printRoad(road);
+        cout<<endl;
+      }
+
     }
 
-  }
+}
 
+Vehicle createVehicle( string type,string color, int length, int width, Road* rd, char symbol,int lane_no, int column_no){
+  Vehicle newVehicle;
+  newVehicle.id = vehicle_id;
+  vehicle_id++;//update the vehicle id
+  newVehicle.type = type;
+  newVehicle.color = color;
+  newVehicle.length = length;
+  newVehicle.symbol = symbol;
+  newVehicle.width = width;
+  newVehicle.on_road = *(rd);
+  newVehicle.pos[0] = lane_no;
+  newVehicle.pos[1] = column_no;
+  (*rd).vehicles.insert(std::pair<int,Vehicle*>(newVehicle.id,&newVehicle));
+  (*rd).symbol_maps.insert(std::pair<char,Vehicle*>(newVehicle.symbol,&newVehicle));
+  return newVehicle;
 }
 
 int main(int argc, char** argv){
   present_time = 1;
+  vehicle_id = 1;
+
   Road road;
   int rlen = 15;
   int rwid = 5;
   road.length = rlen;
   road.width = rwid;
   road.id = 1;
-  road.signal_pos = 10;
+  road.signal_pos = 7;
   char** road_matrix = new char*[rwid];
   for(int i = 0;i<rwid;i++){
     road_matrix[i]=new char[rlen];
    for(int j = 0;j<rlen;j++)road_matrix[i][j]=' ';
   }
-
   road.road_matrix = road_matrix;
 
-  Vehicle mycar;
-  mycar.id = 1;
-  mycar.type = "car";
-  mycar.color = "red";
-  mycar.length = 2;
-  mycar.width = 2;
-  mycar.on_road = road;
-  mycar.symbol='c';
-  road.vehicles.insert(std::pair<int,Vehicle*>(mycar.id,&mycar));
-  road.symbol_maps.insert(std::pair<char,Vehicle*>(mycar.symbol,&mycar));
-
-
-  Vehicle bike;
-  bike.id = 2;
-  bike.type = "bike";
-  bike.color = "red";
-  bike.length = 3;
-  bike.width = 1;
-  bike.pos[0]=0;
-  bike.pos[1]=3;
-  bike.on_road = road;
-  bike.symbol = 'b';
-  road.vehicles.insert(std::pair<int,Vehicle*>(bike.id,&bike));
-  road.symbol_maps.insert(std::pair<char,Vehicle*>(bike.symbol,&bike));
+  Vehicle mycar = createVehicle("car","red",2,2,&road,'c',0,0);
+  Vehicle bike = createVehicle("bike","red",3,1,&road,'b',0,3);
+  cout<<mycar.id<<endl;
+  cout<<mycar.type<<endl;
+  cout<<mycar.color<<endl;
 
   updatePositionsOnRoad(&road);
   printRoad(&road);
@@ -369,8 +380,16 @@ int main(int argc, char** argv){
 
   updateRoad(&road,15);
 
-  //printRoad(&road);
-//  printRoad(&bike.on_road);
+  printRoad(&road);
+  printRoad(&bike.on_road);
+
+//  cout<<mycar.id<<endl;
+//  cout<<mycar.type<<endl;
+//  cout<<mycar.color<<endl;
+
+  //cout<<mycar.symbol<<endl;
+//  cout<<mycar.length<<endl;
+
 
 
 }
