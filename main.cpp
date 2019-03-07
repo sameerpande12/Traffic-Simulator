@@ -17,6 +17,7 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <map>
 #include <vector>
 #include <random>
+#include <queue>
 using namespace std;
 
 std::random_device random_gen;
@@ -337,7 +338,24 @@ void updateRoad(Road* rd){//function to update road matrix
   }
 }
 
-void updatePositionsOnRoad(Road* rd){
+void printRoad(Road* rd){
+  cout<<"Signal Color:"<<rd->signal_color<<endl;
+  for(int i = 0;i<2*rd->length;i++)cout<<"-";
+  cout<<endl;
+  for(int i= 0;i<rd->width;i++){
+
+    for(int j =0;j<rd->length;j++){
+      cout<<rd->road_matrix[i][j];
+      if(j+1==rd->signal_pos)cout<<"|";else cout<<" ";
+    }
+    cout<<endl;
+    for(int j =0;j<2*rd->length;j++)cout<<"-";
+    cout<<endl;
+  }
+  cout<<endl;
+}
+
+void updatePositionsOnRoad(Road* rd,bool print=false){
 
   if(present_time %8 < 4){
     *(rd->signal_color) = 'R';
@@ -366,25 +384,11 @@ void updatePositionsOnRoad(Road* rd){
       }
     }
   }
+
+  if(print)printRoad(rd);
  // no change in time. Just to initialize the roadMatrix.
 }
 
-void printRoad(Road* rd){
-  cout<<"Signal Color:"<<rd->signal_color<<endl;
-  for(int i = 0;i<2*rd->length;i++)cout<<"-";
-  cout<<endl;
-  for(int i= 0;i<rd->width;i++){
-
-    for(int j =0;j<rd->length;j++){
-      cout<<rd->road_matrix[i][j];
-      if(j+1==rd->signal_pos)cout<<"|";else cout<<" ";
-    }
-    cout<<endl;
-    for(int j =0;j<2*rd->length;j++)cout<<"-";
-    cout<<endl;
-  }
-  cout<<endl;
-}
 
 
 void updateRoad(Road* road, int t,bool print){
@@ -401,7 +405,7 @@ void updateRoad(Road* road, int t,bool print){
 
 }
 
-Vehicle createVehicle( string type,string color, int length, int width, Road* rd, char symbol,int lane_no, int column_no){
+Vehicle createVehicleOnRoad( string type, string color , int length, int width, Road* rd, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
   Vehicle newVehicle;
   newVehicle.id = vehicle_id;
   vehicle_id++;//update the vehicle id
@@ -413,35 +417,91 @@ Vehicle createVehicle( string type,string color, int length, int width, Road* rd
   newVehicle.on_road = *(rd);
   newVehicle.pos[0] = lane_no;
   newVehicle.pos[1] = column_no;
+  newVehicle.max_xspeed = max_speed;
+  newVehicle.max_acceleration = max_acceleration;
+  newVehicle.lanechange_vertical_speed = lanechange_vertical_speed;
+  newVehicle.lanechange_horizontal_speed = lanechange_horizontal_speed;
+  newVehicle.velocity[0] = ini_vertical_velocity;
+  newVehicle.velocity[1] = ini_horizontal_velocity;
+  newVehicle.lane_change_freq = lane_change_freq;
   (*rd).vehicles.insert(std::pair<int,Vehicle*>(newVehicle.id,&newVehicle));
   (*rd).symbol_maps.insert(std::pair<char,Vehicle*>(newVehicle.symbol,&newVehicle));
   return newVehicle;
 }
 
+void addVehicleOnRoad(Vehicle* newVehicle , Road * rd){
+  newVehicle->on_road = *(rd);
+  (*rd).vehicles.insert(std::pair<int,Vehicle*>(newVehicle->id,newVehicle));
+  (*rd).symbol_maps.insert(std::pair<char,Vehicle*>(newVehicle->symbol,newVehicle));
+}
+
+Vehicle createVehicle( string type, string color , int length, int width, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
+  Vehicle newVehicle;
+  newVehicle.id = vehicle_id;
+  vehicle_id++;//update the vehicle id
+  newVehicle.type = type;
+  newVehicle.color = color;
+  newVehicle.length = length;
+  newVehicle.symbol = symbol;
+  newVehicle.width = width;
+
+  newVehicle.pos[0] = lane_no;
+  newVehicle.pos[1] = column_no;
+  newVehicle.max_xspeed = max_speed;
+  newVehicle.max_acceleration = max_acceleration;
+  newVehicle.lanechange_vertical_speed = lanechange_vertical_speed;
+  newVehicle.lanechange_horizontal_speed = lanechange_horizontal_speed;
+  newVehicle.velocity[0] = ini_vertical_velocity;
+  newVehicle.velocity[1] = ini_horizontal_velocity;
+  newVehicle.lane_change_freq = lane_change_freq;
+  return newVehicle;
+}
+
+
+
 int main(int argc, char** argv){
-  present_time = 1;
-  vehicle_id = 1;
+  present_time = 1;//initiating the time
+  vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
+
+
+  int default_max_xspeed=3;
+  int default_max_acceleration = 1;
+  int default_lanechange_vertical_speed = 1;
+  int default_lanechange_horizontal_speed = 1;
+  int signal_pos = 8;
+  int default_xpos = 0;
+  int default_ypos = 0;
+  int default_vertical_velocity  = 0;
+  int default_horizontal_velocity = 0;
+  int road_len = 20;
+  int road_wid = 5;
+  float default_lane_change_freq = 0.4;
 
   Road road;
-  int rlen = 20;
-  int rwid = 3;
-  road.length = rlen;
-  road.width = rwid;
+  road.length = road_len;
+  road.width = road_wid;
   road.id = 1;
-  road.signal_pos = 100;
-  char** road_matrix = new char*[rwid];
-  for(int i = 0;i<rwid;i++){
-    road_matrix[i]=new char[rlen];
-   for(int j = 0;j<rlen;j++)road_matrix[i][j]=' ';
+  road.signal_pos = signal_pos;
+  char** road_matrix = new char*[road_wid];
+  for(int i = 0;i<road_wid;i++){
+    road_matrix[i]=new char[road_len];
+   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
   }
   road.road_matrix = road_matrix;
 
-  Vehicle mycar = createVehicle("car","red",2,2,&road,'c',0,0);
-  mycar.lane_change_freq=0;
-  Vehicle bike = createVehicle("bike","red",3,1,&road,'b',0,3);
-  bike.lane_change_freq =1;
-  updatePositionsOnRoad(&road);
-  printRoad(&road);
+  queue<Vehicle> entry_queue;
 
-  updateRoad(&road,15,true);
+
+  Vehicle mycar = createVehicle("car","red",2,2,'c',0,0,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
+  Vehicle bike = createVehicle("bike","red",3,1,'b',0,3,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
+
+  addVehicleOnRoad(&mycar, &road);
+  addVehicleOnRoad(&bike, &road);
+
+
+  updatePositionsOnRoad(&road,true);
+
+
+  updateRoad(&road,4,true);
+
 }
