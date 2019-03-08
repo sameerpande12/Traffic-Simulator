@@ -1,0 +1,123 @@
+
+Road_Id = 1			
+Road_Length = 30
+Road_Width = 5
+Road_Signal = 15
+
+Default_MaxSpeed = 1 		
+Default_Acceleration = 1	
+
+Vehicle_Type = Car		
+Vehicle_Length = 2
+Vehicle_Width = 2
+Vehicle_MaxSpeed = 1
+Vehicle_Acceleration = 1
+
+Vehicle_Type = bike		
+Vehicle_Length = 2
+Vehicle_Width = 1
+
+Vehicle_Type = Bus
+Vehicle_Length = 3
+Vehicle_Width = 2
+
+Vehicle_Type = Truck
+Vehicle_Length = 4
+Vehicle_Width = 2
+
+START
+
+Signal RED			
+
+Car GREEN
+bike BLUE 3 1
+bike GREEN 2 4
+Bus BLUE
+
+Pass 15				
+
+Car GREEN
+bike BLUE
+Truck GREEN
+Bus BLUE
+
+Signal GREEN
+
+END			
+
+Road_Id = 1			
+Road_Length = 30
+Road_Width = 5
+Road_Signal = 15
+
+--------------------------------------------------
+Default_MaxSpeed = 1 		
+Default_Acceleration = 1	
+
+--------------------------------------------------
+Vehicle_Type = Car		
+Vehicle_Length = 2
+Vehicle_Width = 2
+Vehicle_MaxSpeed = 1
+Vehicle_Acceleration = 1
+
+--------------------------------------------------
+Vehicle_Type = bike		
+Vehicle_Length = 2
+Vehicle_Width = 1
+
+--------------------------------------------------
+Vehicle_Type = Bus
+Vehicle_Length = 3
+Vehicle_Width = 2
+
+--------------------------------------------------
+Vehicle_Type = Truck
+Vehicle_Length = 4
+Vehicle_Width = 2
+
+--------------------------------------------------
+START
+
+--------------------------------------------------
+Signal RED			
+
+--------------------------------------------------
+Car GREEN
+bike BLUE 3 1
+bike GREEN 2 4
+Bus BLUE
+
+--------------------------------------------------
+Pass 15				
+
+--------------------------------------------------
+Car GREEN
+bike BLUE
+Truck GREEN
+Bus BLUE
+
+--------------------------------------------------
+Signal GREEN
+
+--------------------------------------------------
+END			
+
+--------------------------------------------------
+lol the string is Signal RED			
+lol the string is Car GREEN
+done?
+1 __ 0 !!
+done?
+
+done?
+lol the string is bike BLUE 3 1
+done?
+2 __ 1 !!
+done?
+
+done?
+lol the string is bike GREEN 2 4
+done?
+3 __ 2 !!
+done?

@@ -28,6 +28,18 @@ std::uniform_real_distribution<>dis(0.0,1.0);
 
 int present_time;
 int vehicle_id;
+int default_max_xspeed=3;
+int default_max_acceleration = 1;
+int default_lanechange_vertical_speed = 1;
+int default_lanechange_horizontal_speed = 1;
+int signal_pos = 8;
+int default_xpos = 0;
+int default_ypos = 0;
+int default_vertical_velocity  = 0;
+int default_horizontal_velocity = 0;
+int road_len = 20;
+int road_wid = 5;
+float default_lane_change_freq = 0.4;
 float getRandom(){
   return (float) dis(gen);
 };//returns a float between 0 to 1 in uniform distribution
@@ -42,6 +54,33 @@ public:
   char* signal_color = new char[0];
   map<int,Vehicle*> vehicles;
   map<char,Vehicle*> symbol_maps;
+
+};
+class template_vehicle
+{
+public:
+  string type; string color ; int length; int width;  char symbol; int lane_no; int column_no; int max_speed; int max_acceleration; int lanechange_vertical_speed; int lanechange_horizontal_speed; 
+  float lane_change_freq;
+  template_vehicle()
+  {
+    type="";
+    length=2;
+    width=2;
+    symbol='\0';
+    max_speed=default_max_xspeed;
+    max_acceleration=default_max_acceleration;
+    lanechange_vertical_speed=default_lanechange_vertical_speed;
+    lanechange_horizontal_speed=default_lanechange_horizontal_speed;
+  
+  }
+
+
+};
+class template_road
+{
+public:
+  int id, length, width, signal;
+
 
 };
 void printRoad(Road* rd);
@@ -458,10 +497,34 @@ Vehicle createVehicle( string type, string color , int length, int width, char s
   newVehicle.lane_change_freq = lane_change_freq;
   return newVehicle;
 }
-
+template_vehicle find_in(string name, vector<template_vehicle> vec)
+{
+  template_vehicle temp;
+  for(auto k=vec.begin();k!=vec.end();k++)
+  {
+    if(k->type.compare(name)==0)
+      return *k;
+  }
+  return temp;
+}
 int main(int argc, char** argv)
 {
-  if(argc!=2)
+  present_time = 1;//initiating the time
+  vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
+  Road road;
+  road.length = road_len;
+  road.width = road_wid;
+  road.id = 1;
+  int vehicle_no=0;
+  road.signal_pos = signal_pos;
+  std::vector< Vehicle> vec_vehicle;
+  char** road_matrix = new char*[road_wid];
+  for(int i = 0;i<road_wid;i++){
+    road_matrix[i]=new char[road_len];
+   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
+  }
+  road.road_matrix = road_matrix;
+  if(argc<2)
   {
     cout<<"Error: no config file passed"<<endl;
     return -1;
@@ -490,11 +553,276 @@ int main(int argc, char** argv)
             if(word.length()>0)
               result.push_back(word);
         }
+      result.push_back("");
      auto k=result.begin();
      for(;k!=result.end();k++)
      {
       cout<<*k<<endl;
-     }  
+     } 
+  std::vector< std::vector<std::string> > tokens;  //every element of vector stores a vector storing one section line by line
+  auto it=result.begin();
+  std::vector<std::string> temp;
+  for(;it!=result.end();it++)
+  {
+      
+      if(it->length()==0)
+        {if(temp.size()>0)
+          {tokens.push_back(temp);}
+        temp.clear();}
+      else
+        temp.push_back(*it);
+  }
+  for(auto it1=tokens.begin();it1!=tokens.end();it1++)
+  {
+    for(auto it2=it1->begin();it2!=it1->end();it2++)
+    {
+      std::cout<<*it2<<std::endl;
+    }
+    std::cout<<endl<<"--------------------------------------------------"<<std::endl;
+  }
+  std::vector< template_vehicle > all_vehicles;
+  bool mode=false;
+  for(auto it1=tokens.begin();it1!=tokens.end();it1++)
+  {
+    //std::vector<std::string> instr=*it;
+    int i=0;
+    std::string type, ins=*(it1->begin());
+    if(ins.length()==0)
+      continue;
+    if(ins.substr(0,5).compare("START")==0)
+      {
+        mode=true;
+        continue;
+      }
+    if(mode==false)
+     { 
+      size_t findc=ins.find("_");
+      if (findc != string::npos) 
+        {
+          type=ins.substr(0,findc);
+        }
+      else
+      {
+        cout<<"Error while parsing, no underscore used "<<endl;
+        return -1;
+      }
+      if(type.compare("Vehicle")==0)
+        {
+          template_vehicle new_vehic;
+          try{
+          for(auto it2=it1->begin();it2!=it1->end();it2++)
+          {
+            std::string property, grabage, value;
+            istringstream ss(*it2);
+            ss>>property;
+            ss>>grabage;
+            ss>>value;
+            if(property.compare("Vehicle_Type")==0)
+            {
+                new_vehic.type=value;
+            }
+            else if(property.compare("Vehicle_Length")==0)
+            {
+                new_vehic.length=stoi(value);
+            }
+            else if(property.compare("Vehicle_Width")==0)
+            {
+                new_vehic.width=stoi(value);
+            }
+            else if(property.compare("Vehicle_MaxSpeed")==0)
+            {
+                new_vehic.max_speed=stoi(value);
+            }
+            else if(property.compare("Vehicle_MaxAcceleration")==0)
+            {
+                new_vehic.max_acceleration=stoi(value);
+            }
+            else if(property.compare("Vehicle_LChange_v_speed")==0)
+            {
+                new_vehic.lanechange_vertical_speed=stoi(value);
+            }
+            else if(property.compare("Vehicle_LChange_h_speed")==0)
+            {
+                new_vehic.lanechange_horizontal_speed=stoi(value);
+            }
+
+
+          }
+        }
+        catch(std::invalid_argument& e){
+          cout<<"error in conversion of vehicle"<<endl;}
+          all_vehicles.push_back(new_vehic);
+        }
+      else if(type.compare("Default")==0)
+        {
+          try{template_vehicle new_vehic;
+          for(auto it2=it1->begin();it2!=it1->end();it2++)
+          {
+            std::string property, grabage, value;
+            istringstream ss(*it2);
+            ss>>property;
+            ss>>grabage;
+            ss>>value;
+            if(property.compare("Default_MaxSpeed")==0)
+            {
+                default_max_xspeed=stoi(value);
+            }
+            else if(property.compare("Default_Acceleration")==0)
+            {
+                default_max_acceleration=stoi(value);
+            }
+            else if(property.compare("Default_LChange_v_speed")==0)
+            {
+                default_lanechange_vertical_speed=stoi(value);
+            }
+            else if(property.compare("Default_LChange_h_speed")==0)
+            {
+                default_lanechange_horizontal_speed=stoi(value);
+            }
+          }
+         }
+         catch(std::invalid_argument& e){
+          cout<<"error in conversion of default"<<endl;}
+         }
+        else if(type.compare("Road")==0)
+        {
+          try{
+          for(auto it2=it1->begin();it2!=it1->end();it2++)
+          {
+            std::string property, grabage, value;
+            istringstream ss(*it2);
+            ss>>property;
+            ss>>grabage;
+            ss>>value;
+            if(property.compare("Road_Length")==0)
+            {
+                road.length=stoi(value);
+            }
+            else if(property.compare("Road_Width")==0)
+            {
+                road.width=stoi(value);
+            }
+            else if(property.compare("Road_Id")==0)
+            {
+              road.id=stoi(value);
+            }
+            else if(property.compare("Road_Signal")==0)
+            {
+              road.signal_pos=stoi(value);
+            }
+            *(road.signal_color)='R';
+          }
+        }
+         catch(std::invalid_argument& e){
+          cout<<"error in conversion of road"<<endl;}
+        }
+      }
+    else
+    {
+      //do the instructions
+      string name, color="red";
+      int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0.4;
+      for(auto it2=it1->begin();it2!=it1->end();it2++)
+          {
+            std::vector<std::string> attributes;
+            cout<<"lol the string is "<<*it2<<endl;
+            istringstream ss(*it2);
+            while(ss)
+            {
+              string temp;
+              ss>>temp;
+              //cout<<temp<<" went in"<<endl;
+              if(temp.compare(" ")!=0)
+              {
+                //cout<<temp<<" went in"<<endl;
+                attributes.push_back(temp);
+              }
+            }
+            //cout<<"No of attributes is "<<attributes.size()<<endl;
+            //transform(attributes[0].begin(), attributes[0].end(), attributes[0].begin(), ::tolower); 
+            if(attributes[0].compare("Pass")==0)
+            {
+              try{updateRoad(&road,stoi(attributes[1]),true);}
+              catch(std::invalid_argument& e){
+              cout<<"error in conversion of time in PASS"<<endl;}
+              //cout<<"came in pass"<<endl;
+              continue;
+            }
+            if(attributes[0].compare("Signal")==0)
+            {
+              //cout<<"continued?"<<endl;
+              *(road.signal_color)=toupper(attributes[1].at(0));
+              //cout<<"continued?"<<endl;
+              continue;
+            }
+            template_vehicle to_load=find_in(attributes[0], all_vehicles);
+            if(to_load.type.length()==0)      //no vehicle found
+              {
+                cout<<attributes[0]<<" was not defined"<<endl;
+                continue;
+              }
+            else
+            {
+              name=to_load.type;
+              length=to_load.length;
+              width=to_load.width;
+              max_speed=to_load.max_speed;
+              max_acceleration=to_load.max_acceleration;
+              lnchangeh=to_load.lanechange_horizontal_speed;
+              lnchangev=to_load.lanechange_vertical_speed;
+              color=attributes[1];
+              try{
+              if(attributes.size()>=4)
+               {
+                lane_no=stoi(attributes[2]);
+                if(attributes.size()>=5)
+                      {
+                        col_no=stoi(attributes[3]);
+                        if(attributes.size()>=6)
+                        {
+                          v_vel=stoi(attributes[4]);
+                          if(attributes.size()>=7)
+                          {
+                            h_vel=stoi(attributes[5]);
+                            if(attributes.size()>=8)
+                              lchang_f=stof(attributes[6]);
+
+                          }
+                        }
+                      }
+                } 
+                } 
+                catch(std::invalid_argument& e){
+              cout<<"error in conversion of non existent "<<endl; return -1;}
+            cout<<"done?"<<endl;
+            Vehicle *temp_vehicle=new Vehicle;
+            Vehicle temp=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
+            vec_vehicle.push_back(temp);
+            temp_vehicle=&temp;
+            //cout<<"done?"<<endl;
+            while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
+            {
+             updateRoad(&road,1,false); 
+            }
+            //cout<<vec_vehicle.size()<<" __ "<<vehicle_no<<" !!"<<endl;
+            addVehicleOnRoad(&(vec_vehicle.at(vehicle_no)), &road);
+            vehicle_no++;
+            //cout<<"done?"<<endl;
+            updatePositionsOnRoad(&road,false);
+            cout<<"done?"<<endl;
+            updateRoad(&road,1,false); //---- segmentation fault here, idk why
+            //vehicle_no++;
+            cout<<"done?"<<endl;
+
+            }
+           // delete temp_vehicle;
+          }
+
+    }
+
+  }
+
+
 
   return 0;
 }
@@ -504,18 +832,7 @@ int main(int argc, char** argv)
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
 
 
-  int default_max_xspeed=3;
-  int default_max_acceleration = 1;
-  int default_lanechange_vertical_speed = 1;
-  int default_lanechange_horizontal_speed = 1;
-  int signal_pos = 8;
-  int default_xpos = 0;
-  int default_ypos = 0;
-  int default_vertical_velocity  = 0;
-  int default_horizontal_velocity = 0;
-  int road_len = 20;
-  int road_wid = 5;
-  float default_lane_change_freq = 0.4;
+  
 
   Road road;
   road.length = road_len;
