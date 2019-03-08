@@ -135,6 +135,7 @@ public:
 
               if(j+pos[1]>= on_road.signal_pos && *(on_road.signal_color) == 'R' && pos[1]<on_road.signal_pos){
                 max_xvel = j-1;
+                cout<<"making "<<type<<" "<<id<<" velocity "<<max_xvel<<endl;
         //        cout<<"WAITING "<<type<<" "<<endl;
 
                 continue;
@@ -319,7 +320,7 @@ void updateRoad(Road* rd){//function to update road matrix
   map<int,Vehicle*>::iterator iter = rd->vehicles.begin();
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++){
   //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
-  cout<<"On road: "<<iter->second->type<<" and id "<<iter->second->id<<endl;
+//  cout<<"On road: "<<iter->second->type<<" and id "<<iter->second->id<<endl;
     (iter->second)->changeVelocity();
   //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
   }
@@ -453,27 +454,28 @@ void updateRoad(Road* road, int t,bool print){
 
 }
 
-Vehicle createVehicleOnRoad( string type, string color , int length, int width, Road* rd, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
-  Vehicle newVehicle;
-  newVehicle.id = vehicle_id;
+Vehicle* createVehicleOnRoad( string type, string color , int length, int width, Road* rd, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
+  Vehicle* newVehicle =  new Vehicle;
+  newVehicle->id = vehicle_id;
   vehicle_id++;//update the vehicle id
-  newVehicle.type = type;
-  newVehicle.color = color;
-  newVehicle.length = length;
-  newVehicle.symbol = symbol;
-  newVehicle.width = width;
-  newVehicle.on_road = *(rd);
-  newVehicle.pos[0] = lane_no;
-  newVehicle.pos[1] = column_no;
-  newVehicle.max_xspeed = max_speed;
-  newVehicle.max_acceleration = max_acceleration;
-  newVehicle.lanechange_vertical_speed = lanechange_vertical_speed;
-  newVehicle.lanechange_horizontal_speed = lanechange_horizontal_speed;
-  newVehicle.velocity[0] = ini_vertical_velocity;
-  newVehicle.velocity[1] = ini_horizontal_velocity;
-  newVehicle.lane_change_freq = lane_change_freq;
-  (*rd).vehicles.insert(std::pair<int,Vehicle*>(newVehicle.id,&newVehicle));
-  (*rd).symbol_maps.insert(std::pair<char,Vehicle*>(newVehicle.symbol,&newVehicle));
+  newVehicle->type = type;
+  newVehicle->color = color;
+  newVehicle->length = length;
+  newVehicle->symbol = symbol;
+  newVehicle->width = width;
+  newVehicle->on_road = *(rd);
+  newVehicle->pos[0] = lane_no;
+  newVehicle->pos[1] = column_no;
+  newVehicle->max_xspeed = max_speed;
+  newVehicle->max_acceleration = max_acceleration;
+  newVehicle->lanechange_vertical_speed = lanechange_vertical_speed;
+  newVehicle->lanechange_horizontal_speed = lanechange_horizontal_speed;
+  newVehicle->velocity[0] = ini_vertical_velocity;
+  newVehicle->velocity[1] = ini_horizontal_velocity;
+  newVehicle->lane_change_freq = lane_change_freq;
+  (*rd).vehicles.insert(std::pair<int,Vehicle*>(newVehicle->id,newVehicle));
+
+  (*rd).symbol_maps.insert(std::pair<char,Vehicle*>(newVehicle->symbol,newVehicle));
   return newVehicle;
 }
 
@@ -486,25 +488,25 @@ void addVehicleOnRoad(Vehicle* newVehicle , Road * rd){
   //cout<<" Later Size "<<(*rd).vehicles.size()<<endl;
 }
 
-Vehicle createVehicle( string type, string color , int length, int width, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
-  Vehicle newVehicle;
-  newVehicle.id = vehicle_id;
+Vehicle* createVehicle( string type, string color , int length, int width, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq){
+  Vehicle* newVehicle = new Vehicle;
+  newVehicle->id = vehicle_id;
   vehicle_id++;//update the vehicle id
-  newVehicle.type = type;
-  newVehicle.color = color;
-  newVehicle.length = length;
-  newVehicle.symbol = symbol;
-  newVehicle.width = width;
+  newVehicle->type = type;
+  newVehicle->color = color;
+  newVehicle->length = length;
+  newVehicle->symbol = symbol;
+  newVehicle->width = width;
 
-  newVehicle.pos[0] = lane_no;
-  newVehicle.pos[1] = column_no;
-  newVehicle.max_xspeed = max_speed;
-  newVehicle.max_acceleration = max_acceleration;
-  newVehicle.lanechange_vertical_speed = lanechange_vertical_speed;
-  newVehicle.lanechange_horizontal_speed = lanechange_horizontal_speed;
-  newVehicle.velocity[0] = ini_vertical_velocity;
-  newVehicle.velocity[1] = ini_horizontal_velocity;
-  newVehicle.lane_change_freq = lane_change_freq;
+  newVehicle->pos[0] = lane_no;
+  newVehicle->pos[1] = column_no;
+  newVehicle->max_xspeed = max_speed;
+  newVehicle->max_acceleration = max_acceleration;
+  newVehicle->lanechange_vertical_speed = lanechange_vertical_speed;
+  newVehicle->lanechange_horizontal_speed = lanechange_horizontal_speed;
+  newVehicle->velocity[0] = ini_vertical_velocity;
+  newVehicle->velocity[1] = ini_horizontal_velocity;
+  newVehicle->lane_change_freq = lane_change_freq;
   return newVehicle;
 }
 template_vehicle find_in(string name, vector<template_vehicle> vec)
@@ -729,40 +731,39 @@ int main(int argc, char** argv)
       }
     else
     {
-      //do the instructions
+      
       string name, color="red";
-      int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0.4;
+      int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0;
       for(auto it2=it1->begin();it2!=it1->end();it2++)
           {
             std::vector<std::string> attributes;
-            cout<<"  the string is "<<*it2<<endl;
+
             istringstream ss(*it2);
             while(ss)
             {
               string temp;
               ss>>temp;
-              //cout<<temp<<" went in"<<endl;
+
               if(temp.compare(" ")!=0)
               {
-                //cout<<temp<<" went in"<<endl;
+
                 attributes.push_back(temp);
               }
             }
-            //cout<<"No of attributes is "<<attributes.size()<<endl;
-            //transform(attributes[0].begin(), attributes[0].end(), attributes[0].begin(), ::tolower);
+
             if(attributes[0].compare("Pass")==0)
             {
               try{updateRoad(&road,stoi(attributes[1]),true);}
               catch(std::invalid_argument& e){
               cout<<"error in conversion of time in PASS"<<endl;}
-              //cout<<"came in pass"<<endl;
+
               continue;
             }
             if(attributes[0].compare("Signal")==0)
             {
-              //cout<<"continued?"<<endl;
+
               *(road.signal_color)=toupper(attributes[1].at(0));
-              //cout<<"continued?"<<endl;
+
               continue;
             }
             template_vehicle to_load=find_in(attributes[0], all_vehicles);
@@ -804,55 +805,23 @@ int main(int argc, char** argv)
                 }
                 catch(std::invalid_argument& e){
               cout<<"error in conversion of non existent "<<endl; return -1;}
-            cout<<"done1?"<<endl;
-            Vehicle *temp_vehicle=new Vehicle;
-            Vehicle temp=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            //vec_vehicle.push_back(temp);
-            temp_vehicle=&temp;
-            //cout<<"done?"<<endl;
+              map<int,Vehicle*>::iterator iter = road.vehicles.begin();
+
+
+            Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
             while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
             {
              updateRoad(&road,1,false);
             }
-            //cout<<vec_vehicle.size()<<" __ "<<vehicle_no<<" !!"<<endl;
-            map<int,Vehicle*>::iterator iter = road.vehicles.begin();
-            cout<<"Before done2 ";
-              for(iter = road.vehicles.begin();iter!= road.vehicles.end();iter++){
-              //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
-              cout<<" "<<iter->second->type<<" and id "<<iter->second->id <<" ";
-                (iter->second)->changeVelocity();
-              //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
-              }
-              cout<<endl;
 
-            addVehicleOnRoad(&temp, &road);
-            cout<<"done2?"<<endl;
+            addVehicleOnRoad(temp_vehicle, &road);
+
             vehicle_no++;
-            //cout<<"done?"<<endl;
-            updatePositionsOnRoad(&road,false);
-            cout<<"Before done3 ";
-              for(iter = road.vehicles.begin();iter!= road.vehicles.end();iter++){
-              //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
-              cout<<" "<<iter->second->type<<" and id "<<iter->second->id <<" ";
-                (iter->second)->changeVelocity();
-              //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
-              }
-              cout<<endl;
-            cout<<"done3?"<<endl;
-            updateRoad(&road,1,false); //---- segmentation fault here, idk why
-            //vehicle_no++;
-            cout<<"Before done4 ";
-              for(iter = road.vehicles.begin();iter!= road.vehicles.end();iter++){
-              //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
-              cout<<" "<<iter->second->type<<" and id "<<iter->second->id <<" ";
-                (iter->second)->changeVelocity();
-              //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
-              }
-              cout<<endl;
-            cout<<"done4?"<<endl;
 
+            updatePositionsOnRoad(&road,false);
+            updateRoad(&road,1,false);
             }
-           // delete temp_vehicle;
+
           }
 
     }
