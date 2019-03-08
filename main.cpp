@@ -119,6 +119,7 @@ public:
 
   void changeVelocity(){/*lane changing and overtaking not yet coded */
   //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
+//  cout<<"Initial Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
      float p = getRandom();
      //cout<<"Changing velocity for "<<type<<" and id "<<id<<endl;
      if( *(on_road.signal_color) == 'R'){
@@ -135,7 +136,7 @@ public:
 
               if(j+pos[1]>= on_road.signal_pos && *(on_road.signal_color) == 'R' && pos[1]<on_road.signal_pos){
                 max_xvel = j-1;
-                cout<<"making "<<type<<" "<<id<<" velocity "<<max_xvel<<endl;
+              //  cout<<"making "<<type<<" "<<id<<" velocity "<<max_xvel<<endl;
         //        cout<<"WAITING "<<type<<" "<<endl;
 
                 continue;
@@ -285,11 +286,11 @@ public:
             if(turn_left){turn_right = false;}
           }
 
-        if(turn_right){
+        if(turn_right && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos ) ) {
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=lanechange_vertical_speed;
         }
-        else if(turn_left){
+        else if(turn_left && !!(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=-lanechange_vertical_speed;
         }
@@ -302,7 +303,7 @@ public:
 
       //  cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
     }
-
+//  cout<<"Changed Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
   // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
   }
 
@@ -731,13 +732,13 @@ int main(int argc, char** argv)
       }
     else
     {
-      
+
       string name, color="red";
       int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0;
       for(auto it2=it1->begin();it2!=it1->end();it2++)
           {
             std::vector<std::string> attributes;
-
+            cout<<"Input: "<<*it2<<endl;
             istringstream ss(*it2);
             while(ss)
             {
