@@ -507,11 +507,12 @@ template_vehicle find_in(string name, vector<template_vehicle> vec)
   }
   return temp;
 }
+Road road;
 int main(int argc, char** argv)
 {
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
-  Road road;
+  
   road.length = road_len;
   road.width = road_wid;
   road.id = 1;
@@ -797,20 +798,20 @@ int main(int argc, char** argv)
             cout<<"done?"<<endl;
             Vehicle *temp_vehicle=new Vehicle;
             Vehicle temp=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            vec_vehicle.push_back(temp);
+            //vec_vehicle.push_back(temp);
             temp_vehicle=&temp;
             //cout<<"done?"<<endl;
             while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
             {
-             updateRoad(&road,1,false); 
+             updateRoad(&road,1,true); 
             }
             //cout<<vec_vehicle.size()<<" __ "<<vehicle_no<<" !!"<<endl;
-            addVehicleOnRoad(&(vec_vehicle.at(vehicle_no)), &road);
+            addVehicleOnRoad(&temp, &road);
             vehicle_no++;
             //cout<<"done?"<<endl;
-            updatePositionsOnRoad(&road,false);
+            updatePositionsOnRoad(&road,true);
             cout<<"done?"<<endl;
-            updateRoad(&road,1,false); //---- segmentation fault here, idk why
+            updateRoad(&road,1,true); //---- segmentation fault here, idk why
             //vehicle_no++;
             cout<<"done?"<<endl;
 
