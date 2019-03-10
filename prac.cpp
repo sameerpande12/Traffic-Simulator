@@ -20,12 +20,23 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <queue>
 #include <fstream>
 #include <sstream>
+#include <chrono>
+#include <thread>
+//#include <GL/glut.h> for linux
+#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
+//#include <GLUT/glew.h>
+#include <stdlib.h>
+#include <GLFW/glfw3.h>
+#include <math.h>
+#include <iostream>
+//include <glad/glad.h> 
+#define GL_SILENCE_DEPRECATION
 using namespace std;
 
 std::random_device random_gen;
 std::mt19937 gen(random_gen());
 std::uniform_real_distribution<>dis(0.0,1.0);
-
+bool flag=false;
 int present_time;
 int vehicle_id;
 int default_max_xspeed=3;
@@ -447,6 +458,8 @@ void updateRoad(Road* road, int t,bool print){
       for(int i=0;i<t;i++){
 
         updateRoad(road);
+           std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
       if(print)printRoad(road);
         cout<<endl;
       }
@@ -520,8 +533,10 @@ template_vehicle find_in(string name, vector<template_vehicle> vec)
   }
   return temp;
 }
+int no_arguments=0;
+char **names;
 Road road;
-int main(int argc, char** argv)
+int proc(int argc, char** argv)
 {
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
@@ -571,7 +586,7 @@ int main(int argc, char** argv)
      auto k=result.begin();
      for(;k!=result.end();k++)
      {
-      cout<<*k<<endl;
+      //cout<<*k<<endl;
      }
   std::vector< std::vector<std::string> > tokens;  //every element of vector stores a vector storing one section line by line
   auto it=result.begin();
@@ -807,32 +822,24 @@ int main(int argc, char** argv)
                 }
                 catch(std::invalid_argument& e){
               cout<<"error in conversion of non existent "<<endl; return -1;}
-  map<int,Vehicle*>::iterator iter = road.vehicles.begin();
+              map<int,Vehicle*>::iterator iter = road.vehicles.begin();
+            while(flag==false)
+            {
+                 std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
+            }
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            while(true) //incomplete check for clash but it works assuming contagious vehicles
+            while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
             {
-              bool isEmpty = true;
-               for(int i = lane_no;i<lane_no+width;i++){
-                for(int j =col_no;j<col_no+length;j++){
-                  if( i < road.width && j<road.length){
-                    if(road.road_matrix[i][j]!=' '){
-                      isEmpty = false;
-                      break;
-                    }
-                  }
-                }
-                if(isEmpty == false)break;
-              }
-             if(isEmtpy)break;
-             else updateRoad(&road,1,false);
+             updateRoad(&road,1,false);
             }
 
             addVehicleOnRoad(temp_vehicle, &road);
 
             vehicle_no++;
-
+            cout<<"why"<<endl;
+            //printRoad(&road);
             updatePositionsOnRoad(&road,false);
             updateRoad(&road,1,false);
             }
@@ -854,6 +861,348 @@ int main(int argc, char** argv)
 
 
 
+
+  Road road;
+  road.length = road_len;
+  road.width = road_wid;
+  road.id = 1;
+  road.signal_pos = signal_pos;
+  char** road_matrix = new char*[road_wid];
+  for(int i = 0;i<road_wid;i++){
+    road_matrix[i]=new char[road_len];
+   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
+  }
+  road.road_matrix = road_matrix;
+
+  queue<Vehicle> entry_queue;
+
+
+  Vehicle mycar = createVehicle("car","red",2,2,'c',0,0,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
+  Vehicle bike = createVehicle("bike","red",3,1,'b',0,3,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
+
+  addVehicleOnRoad(&mycar, &road);
+  addVehicleOnRoad(&bike, &road);
+
+
+  updatePositionsOnRoad(&road,true);
+
+
+  updateRoad(&road,4,true);
+
+}*/
+
+void *main_calls(void *a)
+{
+  cout<<"here???? in main calls"<<endl;
+  if(proc(no_arguments, names)==-1)
+    {
+      cout<<"error occured "<<endl;
+      exit(1);
+    }
+  void *aaa;
+  return aaa;
+}
+
+
+
+//#include <GLUT/glm.hpp>
+/* Handler for window-repaint event. Call back when the window first appears and
+   whenever the window needs to be re-painted. */
+int CurrentWidth = 640,
+    CurrentHeight = 640;
+float **graphic_road;
+char **road_; // we need to make this the char array which takes in input from the simulator
+float angle = -5.f;
+float red=1.0f;
+float green=1.0f;
+float blue =1.0f;
+float xc=15.0, zc=15.0;
+// actual vector representing the camera's direction
+float lx=0.0f,lz=-1.0f;
+// XZ position of the camera
+float x=0.0f,z=0.0f;
+float y=18.0f;
+int plot_convert(char **roadi, int width, int length)
+{
+   int size=0;
+   for(int i=0;i<width;++i)
+   {
+      for(int j=0;j<length;++j)
+      {
+         if (roadi[i][j]=='b'|roadi[i][j]=='c'|roadi[i][j]=='B')
+         {
+            size++;
+
+         }
+         
+      }
+   }
+   //int size=(length)*(width)/2;
+   graphic_road=new float*[size+1];
+   for(int i=0;i<size;i++)
+   {
+      graphic_road[i]=new float[2];
+   }
+   int cur_leng=0;
+   for(int i=0;i<length;++i)
+   {
+      for(int j=0;j<width;++j)
+      {
+         if (roadi[i][j]=='b'|roadi[i][j]=='c'|roadi[i][j]=='B')
+         {
+            graphic_road[cur_leng][0]=-(float)i-1;
+            graphic_road[cur_leng][1]=-(float)j-2;
+            cur_leng++;
+
+         }
+         
+      }
+   }
+  
+
+   return cur_leng;
+
+}
+void changeSize(int w, int h) {
+
+   // Prevent a divide by zero, when window is too short
+   // (you cant make a window of zero width).
+   if (h == 0)
+      h = 1;
+
+   float ratio =  w * 1.0 / h;
+
+   // Use the Projection Matrix
+   glMatrixMode(GL_PROJECTION);
+
+   // Reset Matrix
+   glLoadIdentity();
+
+   // Set the viewport to be the entire window
+   glViewport(0, 0, w, h);
+
+   // Set the correct perspective.
+   gluPerspective(30.0f, ratio, 1.0f, 100.0f);
+
+   // Get Back to the Modelview
+   glMatrixMode(GL_MODELVIEW);
+}
+
+void drawSnowMan() {
+
+  glColor3f(1.0f, 1.0f, 1.0f);
+
+// Draw Body
+  glBegin(GL_QUADS);        // Draw The Cube Using quads
+    glColor3f(0.0f,1.0f,0.0f);    // Color Blue
+    glVertex3f( 1.0f, 1.0f,-1.0f);    // Top Right Of The Quad (Top)
+    glVertex3f(-1.0f, 1.0f,-1.0f);    // Top Left Of The Quad (Top)
+    glVertex3f(-1.0f, 1.0f, 1.0f);    // Bottom Left Of The Quad (Top)
+    glVertex3f( 1.0f, 1.0f, 1.0f);    // Bottom Right Of The Quad (Top)
+    glColor3f(1.0f,0.5f,0.0f);    // Color Orange
+    glVertex3f( 1.0f,-1.0f, 1.0f);    // Top Right Of The Quad (Bottom)
+    glVertex3f(-1.0f,-1.0f, 1.0f);    // Top Left Of The Quad (Bottom)
+    glVertex3f(-1.0f,-1.0f,-1.0f);    // Bottom Left Of The Quad (Bottom)
+    glVertex3f( 1.0f,-1.0f,-1.0f);    // Bottom Right Of The Quad (Bottom)
+    glColor3f(1.0f,0.0f,0.0f);    // Color Red    
+    glVertex3f( 1.0f, 1.0f, 1.0f);    // Top Right Of The Quad (Front)
+    glVertex3f(-1.0f, 1.0f, 1.0f);    // Top Left Of The Quad (Front)
+    glVertex3f(-1.0f,-1.0f, 1.0f);    // Bottom Left Of The Quad (Front)
+    glVertex3f( 1.0f,-1.0f, 1.0f);    // Bottom Right Of The Quad (Front)
+    glColor3f(1.0f,1.0f,0.0f);    // Color Yellow
+    glVertex3f( 1.0f,-1.0f,-1.0f);    // Top Right Of The Quad (Back)
+    glVertex3f(-1.0f,-1.0f,-1.0f);    // Top Left Of The Quad (Back)
+    glVertex3f(-1.0f, 1.0f,-1.0f);    // Bottom Left Of The Quad (Back)
+    glVertex3f( 1.0f, 1.0f,-1.0f);    // Bottom Right Of The Quad (Back)
+    glColor3f(0.0f,0.0f,1.0f);    // Color Blue
+    glVertex3f(-1.0f, 1.0f, 1.0f);    // Top Right Of The Quad (Left)
+    glVertex3f(-1.0f, 1.0f,-1.0f);    // Top Left Of The Quad (Left)
+    glVertex3f(-1.0f,-1.0f,-1.0f);    // Bottom Left Of The Quad (Left)
+    glVertex3f(-1.0f,-1.0f, 1.0f);    // Bottom Right Of The Quad (Left)
+    glColor3f(1.0f,0.0f,1.0f);    // Color Violet
+    glVertex3f( 1.0f, 1.0f,-1.0f);    // Top Right Of The Quad (Right)
+    glVertex3f( 1.0f, 1.0f, 1.0f);    // Top Left Of The Quad (Right)
+    glVertex3f( 1.0f,-1.0f, 1.0f);    // Bottom Left Of The Quad (Right)
+    glVertex3f( 1.0f,-1.0f,-1.0f);    // Bottom Right Of The Quad (Right)
+  glEnd();         
+}
+//float angle = 0.0f;
+
+void renderScene(void) {
+
+   // Clear Color and Depth Buffers
+
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   // Reset transformations
+   glLoadIdentity();
+   // Set the camera
+  gluLookAt(   xc+x+10, y, zc+z+10,
+         -70.0f+10*lx, 0.0f,  -100.0f+10*lz,
+         0.0f, 3.0f,  0.0f);
+
+
+        // Draw ground
+   glColor3f(0.9f, 0.9f, 0.9f);
+   glBegin(GL_QUADS);
+      glVertex3f(-20.0f, 0.0f, -100.0f);
+      glVertex3f(-20.0f, 0.0f,  100.0f);
+      glVertex3f( 20.0f, 0.0f,  100.0f);
+      glVertex3f( 20.0f, 0.0f, -100.0f);
+   glEnd();
+
+        // Draw 36 SnowMen
+   
+
+   int w=5;
+   
+   int l=5;
+         /*road_=new char*[l];
+         for(int i=0;i<l;++i)
+         {
+            road_[i]=new char[w];
+            road_[i]="b--g--c---";
+         }
+         road_[2]="---c------";*/
+
+   int n;
+   road_=road.road_matrix;
+   /*while( l!=30)
+   {
+    cout<<"road.length is "<<road.length<<endl;
+    cout<<"waiting"<<endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+   }*/
+   cout<<"before plot convert"<<endl;
+   //while(road.length<l)
+   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+   n=plot_convert(road_,w,l);
+   cout<<"after plot convert "<<endl;
+   //graphic_road=new float*[5];
+  /*for(int i=0;i<5;i++)
+   {
+      graphic_road[i]=new float[2];
+      graphic_road[i][0]=-(i+0.5);
+      graphic_road[i][1]=-(i+1.0);
+   }*/
+   //*n=5;
+   //for(int i=0;i<*n;++i)
+   //{
+   //std::cout<<"WHYYYYYY"<<std::endl;
+   //std::cout<<n<<std::endl;
+   if(n!=0)
+      //std::cout<<graphic_road[0][0]<<"\t";
+   //}
+   for(int i=0; i<3;++i)
+   {
+      glPushMatrix();
+      glTranslatef((graphic_road[i][0]-i)*2.0,0,(graphic_road[i][1]-i) * 15.0);
+      drawSnowMan();
+      glPopMatrix();
+   }
+
+   /*for(int i = -5; i < 1; i++)
+      for(int j=-5; j < 1; j++) {
+         glPushMatrix();
+         glTranslatef(i*10.0,0,j * 10.0);
+         drawSnowMan();
+         glPopMatrix();
+      }*/
+
+   glutSwapBuffers();
+}
+
+void processSpecialKeys(int key, int xx, int yy) {
+
+   float fraction = 0.1f;
+
+   switch (key) {
+      case GLUT_KEY_LEFT :
+         angle -= 0.01f;
+         lx = sin(angle);
+         lz = -cos(angle);
+         break;
+      case GLUT_KEY_RIGHT :
+         angle += 0.01f;
+         lx = sin(angle);
+         lz = -cos(angle);
+         break;
+      case GLUT_KEY_UP :
+         x += lx * fraction;
+         z += lz * fraction;
+         break;
+      case GLUT_KEY_DOWN :
+         x -= lx * fraction;
+         z -= lz * fraction;
+         break;
+      case GLUT_KEY_F1:
+         y=y+0.05;
+
+         break;
+      case GLUT_KEY_F2:
+         y=y-0.05;
+         
+         break;
+   }
+   cout<<angle<<endl;
+}
+void processNormalKeys(unsigned char key, int x, int y) {
+
+   if (key == 'q')
+      exit(0);
+}
+
+
+
+int main(int argc, char **argv) {
+
+   // init GLUT and create window
+   no_arguments=argc;
+   names=argv;
+   glutInit(&argc, argv);
+   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+   glutInitWindowPosition(100,100);
+   glutInitWindowSize(800,800);
+   glutCreateWindow("Lighthouse3D- GLUT Tutorial");
+   //std::cout<<"HERERERERE"<<std::endl;
+   // register callbacks
+   
+   pthread_t threads;
+   int rc;
+   int i;
+   cout<<"here>???"<<endl;
+    rc = pthread_create(&threads, NULL, main_calls, (void *)i);
+      
+      if (rc) {
+         cout << "Error:unable to create thread," << rc << endl;
+         exit(-1);
+      }
+  cout<<"here>???"<<endl;
+   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+   // enter GLUT event processing cycle
+   flag=true;
+   glutDisplayFunc(renderScene);
+   glutReshapeFunc(changeSize);
+   glutIdleFunc(renderScene);
+   glutKeyboardFunc(processNormalKeys);
+   glutSpecialFunc(processSpecialKeys);
+
+   // OpenGL init
+   glEnable(GL_DEPTH_TEST);
+   glutMainLoop();
+
+   // enter GLUT event processing cycle
+  // glutMainLoop();
+
+   return 1;
+}
+/*int main(int argc, char** argv){
+  present_time = 1;//initiating the time
+  vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
+
+
+  
 
   Road road;
   road.length = road_len;

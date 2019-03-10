@@ -1,34 +1,114 @@
-/*
- * GL01Hello.cpp: Test OpenGL C/C++ Setup
- */
 
-#include <GL/glut.h>  // GLUT, includes glu.h and gl.h
 
+//#include <GL/glut.h>
+#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h
+//#include <GLUT/glew.h>
+#include <stdlib.h>
+#include <GLFW/glfw3.h>
+//include <glad/glad.h> 
+#define GL_SILENCE_DEPRECATION
+//#include <GLUT/glm.hpp>
 /* Handler for window-repaint event. Call back when the window first appears and
    whenever the window needs to be re-painted. */
-void display() {
-   glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
-   glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer
+int CurrentWidth = 640,
+    CurrentHeight = 640;
+float angle = 0.0f;
+float red=1.0f;
+float green=1.0f;
+float blue =1.0f;
+void changeSize(int w, int h) {
 
-   // Draw a Red 1x1 Square centered at origin
-   glBegin(GL_QUADS);              // Each set of 4 vertices form a quad
-      glColor3f(1.0f, 0.0f, 0.0f); // Red
-      glVertex2f(-0.5f, -0.5f);    // x, y
-      glVertex2f( 0.5f, -0.5f);
-      glVertex2f( 0.5f,  0.5f);
-      glVertex2f(-0.5f,  0.5f);
-   glEnd();
+   // Prevent a divide by zero, when window is too short
+   // (you cant make a window of zero width).
+   if (h == 0)
+      h = 1;
 
-   glFlush();  // Render now
+   float ratio =  w * 1.0 / h;
+
+   // Use the Projection Matrix
+   glMatrixMode(GL_PROJECTION);
+
+   // Reset Matrix
+   glLoadIdentity();
+
+   // Set the viewport to be the entire window
+   glViewport(0, 0, w, h);
+
+   // Set the correct perspective.
+   gluPerspective(30.0f, ratio, 1.0f, 100.0f);
+
+   // Get Back to the Modelview
+   glMatrixMode(GL_MODELVIEW);
 }
 
-/* Main function: GLUT runs as a console application starting at main()  */
-int main(int argc, char** argv) {
-   glutInit(&argc, argv);                 // Initialize GLUT
-   glutCreateWindow("OpenGL Setup Test"); // Create a window with the given title
-   glutInitWindowSize(320, 320);   // Set the window's initial width & height
-   glutInitWindowPosition(50, 50); // Position the window's initial top-left corner
-   glutDisplayFunc(display); // Register display callback handler for window re-paint
-   glutMainLoop();           // Enter the infinitely event-processing loop
-   return 0;
+//float angle = 0.0f;
+
+void renderScene(void) {
+
+   // Clear Color and Depth Buffers
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+   // Reset transformations
+   glLoadIdentity();
+   // Set the camera
+   gluLookAt(  0.0f, 0.0f, 10.0f,
+            0.0f, 0.0f,  0.0f,
+            0.0f, 1.0f,  0.0f);
+
+   glRotatef(angle, 0.0f, 1.0f, 0.0f);
+   glColor3f(red,green,blue);
+   glBegin(GL_TRIANGLES);
+      glVertex3f( 0.0f, 1.0f, 0.0f);
+      glVertex3f( -1.50f, 1.0f, 0.0);
+      glVertex3f( 0.0f, -1.5f, 0.0);
+   glEnd();
+
+   angle+=0.5f;
+
+   glutSwapBuffers();
+}
+void processNormalKeys(unsigned char key, int x, int y) {
+
+   if (key == 'q')
+      exit(0);
+}
+
+void processSpecialKeys(int key, int x, int y) {
+
+   switch(key) {
+      case GLUT_KEY_LEFT :
+            red = 1.0;
+            green = 0.0;
+            blue = 0.0; break;
+      case GLUT_KEY_UP :
+            red = 0.0;
+            green = 1.0;
+            blue = 0.0; break;
+      case GLUT_KEY_RIGHT :
+            red = 0.0;
+            green = 0.0;
+            blue = 1.0; break;
+   }
+}
+
+int main(int argc, char **argv) {
+
+   // init GLUT and create window
+   glutInit(&argc, argv);
+   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
+   glutInitWindowPosition(100,100);
+   glutInitWindowSize(800,800);
+   glutCreateWindow("Lighthouse3D- GLUT Tutorial");
+
+   // register callbacks
+   glutDisplayFunc(renderScene);
+   glutReshapeFunc(changeSize);
+   glutIdleFunc(renderScene);
+   glutKeyboardFunc(processNormalKeys);
+   glutSpecialFunc(processSpecialKeys);
+
+   // enter GLUT event processing cycle
+   glutMainLoop();
+
+   return 1;
 }
