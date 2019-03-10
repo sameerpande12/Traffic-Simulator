@@ -827,15 +827,15 @@ int main(int argc, char** argv)
                 if(isEmpty == false)break;
               }
              if(isEmpty)break;
-             else updateRoad(&road,1,false);
+             else updateRoad(&road,1,true);
             }
 
             addVehicleOnRoad(temp_vehicle, &road);
 
             vehicle_no++;
 
-            updatePositionsOnRoad(&road,false);
-            updateRoad(&road,1,false);
+            updatePositionsOnRoad(&road,true);
+            //updateRoad(&road,1,true);
             }
 
           }
