@@ -810,9 +810,22 @@ int main(int argc, char** argv)
 
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
+            while(true) //incomplete check for clash but it works assuming contagious vehicles
             {
-             updateRoad(&road,1,false);
+              bool isEmpty = true;
+               for(int i = lane_no;i<lane_no+width;i++){
+                for(int j =col_no;j<col_no+length;j++){
+                  if( i < road.width && j<road.length){
+                    if(road.road_matrix[i][j]!=' '){
+                      isEmpty = false;
+                      break;
+                    }
+                  }
+                }
+                if(isEmpty == false)break;
+              }
+             if(isEmtpy)break;
+             else updateRoad(&road,1,false);
             }
 
             addVehicleOnRoad(temp_vehicle, &road);
