@@ -120,6 +120,7 @@ public:
   void changeVelocity(){/*lane changing and overtaking not yet coded */
   //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
 //  cout<<"Initial Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
+
      float p = getRandom();
      //cout<<"Changing velocity for "<<type<<" and id "<<id<<endl;
      if( *(on_road.signal_color) == 'R'){
@@ -290,7 +291,7 @@ public:
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=lanechange_vertical_speed;
         }
-        else if(turn_left && !!(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
+        else if(turn_left && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=-lanechange_vertical_speed;
         }
@@ -525,7 +526,7 @@ int main(int argc, char** argv)
 {
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
-  
+
   road.length = road_len;
   road.width = road_wid;
   road.id = 1;
@@ -825,7 +826,7 @@ int main(int argc, char** argv)
                 }
                 if(isEmpty == false)break;
               }
-             if(isEmtpy)break;
+             if(isEmpty)break;
              else updateRoad(&road,1,false);
             }
 
