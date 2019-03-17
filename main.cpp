@@ -520,12 +520,11 @@ template_vehicle find_in(string name, vector<template_vehicle> vec)
   }
   return temp;
 }
-Road road;
 int main(int argc, char** argv)
 {
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
-  
+  Road road;
   road.length = road_len;
   road.width = road_wid;
   road.id = 1;
@@ -807,21 +806,22 @@ int main(int argc, char** argv)
                 }
                 catch(std::invalid_argument& e){
               cout<<"error in conversion of non existent "<<endl; return -1;}
-  map<int,Vehicle*>::iterator iter = road.vehicles.begin();
+              map<int,Vehicle*>::iterator iter = road.vehicles.begin();
 
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
             while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
             {
-             updateRoad(&road,1,false);
+             updateRoad(&road,1,true);
             }
 
             addVehicleOnRoad(temp_vehicle, &road);
 
             vehicle_no++;
-
-            updatePositionsOnRoad(&road,false);
-            updateRoad(&road,1,false);
+            cout<<"why"<<endl;
+            printRoad(&road);
+            updatePositionsOnRoad(&road,true);
+            updateRoad(&road,1,true);
             }
 
           }
