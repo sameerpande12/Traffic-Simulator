@@ -29,6 +29,7 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <GLFW/glfw3.h>
 #include <math.h>
 #include <iostream>
+#define PI 3.14159
 //include <glad/glad.h> 
 #define GL_SILENCE_DEPRECATION
 using namespace std;
@@ -815,6 +816,18 @@ int proc(int argc, char** argv)
 
               continue;
             }
+            if(attributes[0].compare("END")==0)
+            {
+              if(*(road.signal_color)=='G')
+              {
+                while(!road.vehicles.empty())
+                {
+                  updateRoad(&road,1,false);
+                }
+              }
+              else
+                continue;
+            }
             cout<<"Abnormal behavious dfd"<<endl;
             template_vehicle to_load=find_in(attributes[0], all_vehicles);
             if(to_load.type.length()==0)      //no vehicle found
@@ -967,7 +980,7 @@ float red=1.0f;
 float green=1.0f;
 float blue =1.0f;
 float xc=15.0, zc=15.0;
-float perspective_angle=60.0f;
+float perspective_angle=45.0f;
 // actual vector representing the camera's direction
 float lx=-0.813357,lz=-0.581764f;
 // XZ position of the camera
@@ -1038,12 +1051,76 @@ void changeSize(int w, int h) {
    glViewport(0, 0, w, h);
 
    // Set the correct perspective.
-   gluPerspective(perspective_angle, ratio*1.0/(1.73-0.5), 10.0f, 100.0f);
+   gluPerspective(perspective_angle, ratio*1.0, 10.0f, 100.0f);
 
    // Get Back to the Modelview
    glMatrixMode(GL_MODELVIEW);
 }
+void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, bool flag=false)
+{
+    GLfloat x              = 0.0;
+    GLfloat y              = 0.0;
+    GLfloat anglepp         = 0.0;
+    GLfloat angle_stepsizepp = 0.1;
 
+    /** Draw the tube */
+    if(flag==false){
+      glColor3f(R,G,B);
+      glBegin(GL_QUAD_STRIP);
+      angle = 0.0;
+          while( anglepp < 2*PI ) {
+              x = radius * cos(anglepp);
+              y = radius * sin(anglepp);
+              glVertex3f(x, height, y  );
+              glVertex3f(x, 0.0, y);
+              anglepp = anglepp + angle_stepsizepp;
+          }
+          glVertex3f(radius, height, 0.0);
+          glVertex3f(radius, 0.0, 0.0);
+      glEnd();
+
+      /** Draw the circle on top of cylinder */
+      glColor3f(R,G,B);
+      glBegin(GL_POLYGON);
+      angle = 0.0;
+          while( anglepp < 2*PI ) {
+              x = radius * cos(anglepp);
+              y = radius * sin(anglepp);
+              glVertex3f(x, height, y);
+              anglepp = anglepp + angle_stepsizepp;
+          }
+          glVertex3f(radius, height, y);
+    }
+    else
+    {
+      glColor3f(R,G,B);
+      glBegin(GL_QUAD_STRIP);
+      angle = 0.0;
+          while( anglepp < 2*PI ) {
+              x = radius * cos(anglepp);
+              y = radius * sin(anglepp);
+              glVertex3f(height, y, x );
+              glVertex3f(0.0, y, x);
+              anglepp = anglepp + angle_stepsizepp;
+          }
+          glVertex3f(height, 0.0, radius);
+          glVertex3f(0.0, 0.0, radius);
+      glEnd();
+
+      /** Draw the circle on top of cylinder */
+      glColor3f(R,G,B);
+      glBegin(GL_POLYGON);
+      angle = 0.0;
+          while( anglepp < 2*PI ) {
+              x = radius * cos(anglepp);
+              y = radius * sin(anglepp);
+              glVertex3f(height, y, x);
+              anglepp = anglepp + angle_stepsizepp;
+          }
+          glVertex3f(height, y, radius);
+    }
+    glEnd();
+}
 void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
@@ -1052,8 +1129,8 @@ void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float
 glBegin(GL_QUADS);        // Draw The Cube Using quads
     glColor3f(r,b,g);    // Color Blue
     glVertex3f( leng/2.0, ht,-wid/2.0);    // Top Right Of The Quad (Top)
-    glVertex3f(-leng/2.0, ht,-wid/2.0);    // Top Left Of The Quad (Top)
-    glVertex3f(-leng/2.0, ht, wid/2.0);    // Bottom Left Of The Quad (Top)
+    glVertex3f(0.0, ht,-wid/2.0);    // Top Left Of The Quad (Top)
+    glVertex3f(0, ht, wid/2.0);    // Bottom Left Of The Quad (Top)
     glVertex3f( leng/2.0, ht, wid/2.0);    // Bottom Right Of The Quad (Top)
     glColor3f(r,b,g);      // Color Orange
     glVertex3f( leng/2.0,0.0f, wid/2.0);    // Top Right Of The Quad (Bottom)
@@ -1061,8 +1138,8 @@ glBegin(GL_QUADS);        // Draw The Cube Using quads
     glVertex3f(-leng/2.0,0,-wid/2.0);    // Bottom Left Of The Quad (Bottom)
     glVertex3f( leng/2.0,0,-wid/2.0);    // Bottom Right Of The Quad (Bottom)
     glColor3f(r,b,g);      // Color Red    
-    glVertex3f( leng/2.0, ht, wid/2.0);    // Top Right Of The Quad (Front)
-    glVertex3f(-leng/2.0, ht, wid/2.0);    // Top Left Of The Quad (Front)
+    glVertex3f( leng/2.0, ht/2, wid/2.0);    // Top Right Of The Quad (Front)
+    glVertex3f(-leng/2.0, ht/2, wid/2.0);    // Top Left Of The Quad (Front)
     glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Left Of The Quad (Front)
     glVertex3f( leng/2.0,0, wid/2.0);    // Bottom Right Of The Quad (Front)
     glColor3f(r,b,g);      // Color Yellow
@@ -1071,14 +1148,14 @@ glBegin(GL_QUADS);        // Draw The Cube Using quads
     glVertex3f(-leng/2.0, ht,-wid/2.0);    // Bottom Left Of The Quad (Back)
     glVertex3f( leng/2.0, ht,-wid/2.0);    // Bottom Right Of The Quad (Back)
     glColor3f(r,b,g);      // Color Blue
-    glVertex3f(-leng/2.0, ht, wid/2.0);    // Top Right Of The Quad (Left)
+    glVertex3f(0, ht, wid/2.0);    // Top Right Of The Quad (Left)
     glVertex3f(-leng/2.0, ht,-wid/2.0);    // Top Left Of The Quad (Left)
     glVertex3f(-leng/2.0,0,-wid/2.0);    // Bottom Left Of The Quad (Left)
-    glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Right Of The Quad (Left)
+    glVertex3f(0,0, wid/2.0);    // Bottom Right Of The Quad (Left)
     glColor3f(r,b,g);      // Color Violet
     glVertex3f( leng/2.0, ht,-wid/2.0);    // Top Right Of The Quad (Right)
-    glVertex3f( leng/2.0, ht, wid/2.0);    // Top Left Of The Quad (Right)
-    glVertex3f( leng/2.0,0.0f, wid/2.0);    // Bottom Left Of The Quad (Right)
+    glVertex3f( 0, ht, wid/2.0);    // Top Left Of The Quad (Right)
+    glVertex3f( 0,0.0f, wid/2.0);    // Bottom Left Of The Quad (Right)
     glVertex3f( leng/2.0,0.0f,-wid/2.0);    // Bottom Right Of The Quad (Right)
   glEnd(); 
 }
@@ -1101,10 +1178,10 @@ void renderScene(void) {
         // Draw ground
    glColor3f(0.9f, 0.9f, 0.9f);
    glBegin(GL_QUADS);
-      glVertex3f(-road_len/2.0, 0.0f, -road_wid/2.0);
-      glVertex3f(-road_len/2.0, 0.0f,  road_wid/2.0);
-      glVertex3f( road_len/2.0, 0.0f,  road_wid/2.0);
-      glVertex3f( road_len/2.0, 0.0f, -road_wid/2.0);
+      glVertex3f(-road_len/2.0, -0.3f, -road_wid/2.0);
+      glVertex3f(-road_len/2.0, -0.3f,  road_wid/2.0);
+      glVertex3f( road_len/2.0, -0.3f,  road_wid/2.0);
+      glVertex3f( road_len/2.0, -0.3f, -road_wid/2.0);
    glEnd();
 
         // Draw 36 SnowMen
@@ -1135,6 +1212,35 @@ void renderScene(void) {
    while(signal1==false)std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
    n=plot_convert(road_,w,l);
+   glPushMatrix();
+   glTranslatef(0,0,-road_wid/2.0-3.0);
+   draw_cylinder(0.2,8.0,0.4,0.4,0.4);
+   
+    glPopMatrix();
+    if(*(road.signal_color)=='R'){
+      glColor3f(1,0,0);
+      GLUquadric *quad;
+      quad = gluNewQuadric();
+      glPushMatrix();
+      glTranslatef(-1.0,6.5,-road_wid/2.0-3.3);
+      glRotatef(90.0, 0.0f, 1.0f, 0.0f);
+      gluDisk(quad,0.0,0.6,100.0,100.0);
+      glPopMatrix();
+    }
+    else
+    {
+      glColor3f(0,1,0);
+      GLUquadric *quad;
+      quad = gluNewQuadric();
+      glPushMatrix();
+      glTranslatef(-1.0,7.5,-road_wid/2.0-3.3);
+      glRotatef(90.0, 0.0f, 1.0f, 0.0f);
+      gluDisk(quad,0.0,0.6,100.0,100.0);
+      glPopMatrix();
+    }
+   //drawVehicle(r,b,g,temp.length,temp.width,veh_height);
+      //cout<<"before pop"<<endl;
+   
    //cout<<"after plot convert "<<endl;
    //graphic_road=new float*[5];
   /*for(int i=0;i<5;i++)
