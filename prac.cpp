@@ -1044,40 +1044,40 @@ void changeSize(int w, int h) {
    glMatrixMode(GL_MODELVIEW);
 }
 
-void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0) {
+void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
 
 // Draw Body
 glBegin(GL_QUADS);        // Draw The Cube Using quads
     glColor3f(r,b,g);    // Color Blue
-    glVertex3f( leng/2.0, 1.0f,-wid/2.0);    // Top Right Of The Quad (Top)
-    glVertex3f(-leng/2.0, 1.0f,-wid/2.0);    // Top Left Of The Quad (Top)
-    glVertex3f(-leng/2.0, 1.0f, wid/2.0);    // Bottom Left Of The Quad (Top)
-    glVertex3f( leng/2.0, 1.0f, wid/2.0);    // Bottom Right Of The Quad (Top)
+    glVertex3f( leng/2.0, ht,-wid/2.0);    // Top Right Of The Quad (Top)
+    glVertex3f(-leng/2.0, ht,-wid/2.0);    // Top Left Of The Quad (Top)
+    glVertex3f(-leng/2.0, ht, wid/2.0);    // Bottom Left Of The Quad (Top)
+    glVertex3f( leng/2.0, ht, wid/2.0);    // Bottom Right Of The Quad (Top)
     glColor3f(r,b,g);      // Color Orange
     glVertex3f( leng/2.0,0.0f, wid/2.0);    // Top Right Of The Quad (Bottom)
     glVertex3f(-leng/2.0,0, wid/2.0);    // Top Left Of The Quad (Bottom)
     glVertex3f(-leng/2.0,0,-wid/2.0);    // Bottom Left Of The Quad (Bottom)
     glVertex3f( leng/2.0,0,-wid/2.0);    // Bottom Right Of The Quad (Bottom)
     glColor3f(r,b,g);      // Color Red    
-    glVertex3f( leng/2.0, 1.0f, wid/2.0);    // Top Right Of The Quad (Front)
-    glVertex3f(-leng/2.0, 1.0f, wid/2.0);    // Top Left Of The Quad (Front)
+    glVertex3f( leng/2.0, ht, wid/2.0);    // Top Right Of The Quad (Front)
+    glVertex3f(-leng/2.0, ht, wid/2.0);    // Top Left Of The Quad (Front)
     glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Left Of The Quad (Front)
     glVertex3f( leng/2.0,0, wid/2.0);    // Bottom Right Of The Quad (Front)
     glColor3f(r,b,g);      // Color Yellow
     glVertex3f( leng/2.0,0.0f,-wid/2.0);    // Top Right Of The Quad (Back)
     glVertex3f(-leng/2.0,0.0f,-wid/2.0);    // Top Left Of The Quad (Back)
-    glVertex3f(-leng/2.0, 1.0f,-wid/2.0);    // Bottom Left Of The Quad (Back)
-    glVertex3f( leng/2.0, 1.0f,-wid/2.0);    // Bottom Right Of The Quad (Back)
+    glVertex3f(-leng/2.0, ht,-wid/2.0);    // Bottom Left Of The Quad (Back)
+    glVertex3f( leng/2.0, ht,-wid/2.0);    // Bottom Right Of The Quad (Back)
     glColor3f(r,b,g);      // Color Blue
-    glVertex3f(-leng/2.0, 1.0f, wid/2.0);    // Top Right Of The Quad (Left)
-    glVertex3f(-leng/2.0, 1.0f,-wid/2.0);    // Top Left Of The Quad (Left)
+    glVertex3f(-leng/2.0, ht, wid/2.0);    // Top Right Of The Quad (Left)
+    glVertex3f(-leng/2.0, ht,-wid/2.0);    // Top Left Of The Quad (Left)
     glVertex3f(-leng/2.0,0,-wid/2.0);    // Bottom Left Of The Quad (Left)
     glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Right Of The Quad (Left)
     glColor3f(r,b,g);      // Color Violet
-    glVertex3f( leng/2.0, 1.0f,-wid/2.0);    // Top Right Of The Quad (Right)
-    glVertex3f( leng/2.0, 1.0f, wid/2.0);    // Top Left Of The Quad (Right)
+    glVertex3f( leng/2.0, ht,-wid/2.0);    // Top Right Of The Quad (Right)
+    glVertex3f( leng/2.0, ht, wid/2.0);    // Top Left Of The Quad (Right)
     glVertex3f( leng/2.0,0.0f, wid/2.0);    // Bottom Left Of The Quad (Right)
     glVertex3f( leng/2.0,0.0f,-wid/2.0);    // Bottom Right Of The Quad (Right)
   glEnd(); 
@@ -1181,9 +1181,17 @@ void renderScene(void) {
       r=1.0;
       g=0.6;
     }
+    float veh_height=2.0;
+    string bustr="bus";
+    string bikstr="bike";
+    if(strcmpign(temp.type, bustr))
+      veh_height=3.5;
+    else if(strcmpign(temp.type, bikstr))
+      veh_height=1.5;
+
 
       //cout<<"before draw number i "<<i++<<"And vehicle is "<<temp.type<<endl;
-    drawVehicle(r,b,g,temp.length,temp.width);
+    drawVehicle(r,b,g,temp.length,temp.width,veh_height);
       //cout<<"before pop"<<endl;
     glPopMatrix();
     r=0.0;
