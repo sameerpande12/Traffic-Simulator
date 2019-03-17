@@ -120,6 +120,7 @@ public:
   void changeVelocity(){/*lane changing and overtaking not yet coded */
   //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
 //  cout<<"Initial Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
+
      float p = getRandom();
      //cout<<"Changing velocity for "<<type<<" and id "<<id<<endl;
      if( *(on_road.signal_color) == 'R'){
@@ -290,7 +291,7 @@ public:
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=lanechange_vertical_speed;
         }
-        else if(turn_left && !!(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
+        else if(turn_left && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=-lanechange_vertical_speed;
         }
@@ -524,7 +525,9 @@ int main(int argc, char** argv)
 {
   present_time = 1;//initiating the time
   vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
+
   Road road;
+
   road.length = road_len;
   road.width = road_wid;
   road.id = 1;
@@ -810,18 +813,41 @@ int main(int argc, char** argv)
 
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
+            while(true) //incomplete check for clash but it works assuming contagious vehicles
             {
+<<<<<<< HEAD
              updateRoad(&road,1,true);
+=======
+              bool isEmpty = true;
+               for(int i = lane_no;i<lane_no+width;i++){
+                for(int j =col_no;j<col_no+length;j++){
+                  if( i < road.width && j<road.length){
+                    if(road.road_matrix[i][j]!=' '){
+                      isEmpty = false;
+                      break;
+                    }
+                  }
+                }
+                if(isEmpty == false)break;
+              }
+             if(isEmpty)break;
+             else updateRoad(&road,1,true);
+>>>>>>> efe7d6c936d4ee2e0b7de4e388584604938c6924
             }
 
             addVehicleOnRoad(temp_vehicle, &road);
 
             vehicle_no++;
+<<<<<<< HEAD
             cout<<"why"<<endl;
             printRoad(&road);
             updatePositionsOnRoad(&road,true);
             updateRoad(&road,1,true);
+=======
+
+            updatePositionsOnRoad(&road,true);
+            //updateRoad(&road,1,true);
+>>>>>>> efe7d6c936d4ee2e0b7de4e388584604938c6924
             }
 
           }
