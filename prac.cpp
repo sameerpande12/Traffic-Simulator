@@ -319,7 +319,7 @@ public:
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=lanechange_vertical_speed;
         }
-        else if(turn_left && !!(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
+        else if(turn_left && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=-lanechange_vertical_speed;
         }
@@ -855,20 +855,23 @@ int proc(int argc, char** argv)
             }
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            int occupy_width=lane_no+width-1;
-            int occupy_length=col_no+width-1;
-            if(occupy_length<0){
-              occupy_length=0;
-            }
-            if(occupy_length>road_len){
-              occupy_length=road_len-1;
-            }
-              if(occupy_width>road_wid){
-              occupy_width=road_wid-1;
-            }
-            while(road.road_matrix[lane_no][col_no]!=' '&&road.road_matrix[occupy_length][occupy_width]!=' ')
+            while(true) //incomplete check for clash but it works assuming contagious vehicles
             {
-              updateRoad(&road,1,true);
+             updateRoad(&road,1,false);
+              bool isEmpty = true;
+               for(int i = lane_no;i<lane_no+width;i++){
+                for(int j =col_no;j<col_no+length;j++){
+                  if( i < road.width && j<road.length){
+                    if(road.road_matrix[i][j]!=' '){
+                      isEmpty = false;
+                      break;
+                    }
+                  }
+                }
+                if(isEmpty == false)break;
+              }
+             if(isEmtpy)break;
+             else updateRoad(&road,1,false);
             }
             addVehicleOnRoad(temp_vehicle, &road);
 
