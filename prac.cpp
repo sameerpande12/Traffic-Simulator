@@ -22,10 +22,6 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <sstream>
 #include <chrono>
 #include <thread>
-#include "template_vehicle.cpp"
-#include "template_road.cpp"
-#include "Vehicle.cpp"
-#include "Road.cpp"
 //#include <GL/glut.h> for linux
 #include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
 //#include <GLUT/glew.h>
@@ -78,9 +74,277 @@ bool strcmpign(std::string & str1, std::string &str2)
   return ( (str1.size() == str2.size() ) &&
        std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar) );
 }
+class Vehicle;
+class Road{
+public:
+  int id;//
+  int length=1;//
+  int width=1;// make them of type final
+  char** road_matrix;
+  int signal_pos;
+  char* signal_color = new char[0];
+  map<int,Vehicle*> vehicles;
+  map<char,Vehicle*> symbol_maps;
 
+};
+class template_vehicle
+{
+public:
+  string type; string color ; int length; int width;  char symbol; int lane_no; int column_no; int max_speed; int max_acceleration; int lanechange_vertical_speed; int lanechange_horizontal_speed;
+  float lane_change_freq;
+  template_vehicle()
+  {
+    type="";
+    length=2;
+    width=2;
+    symbol=' ';
+    max_speed=default_max_xspeed;
+    max_acceleration=default_max_acceleration;
+    lanechange_vertical_speed=default_lanechange_vertical_speed;
+    lanechange_horizontal_speed=default_lanechange_horizontal_speed;
+
+  }
+
+
+};
+class template_road
+{
+public:
+  int id, length, width, signal;
+
+
+};
 void printRoad(Road* rd);
+class Vehicle{
+public:
 
+ //existential parameters
+  int id;//ids should be unique for all the vehicles
+  string type;
+  string color;
+  int length;
+  int width;
+  char symbol;
+  Road on_road;//road on which vehicle is moving
+
+  //movement parameters
+  int max_xspeed = 3;
+  int max_acceleration = 1;
+  float lane_change_freq = 0.5;
+  int lanechange_horizontal_speed = 1;
+  int lanechange_vertical_speed = 1;
+  //overtaking done only from right side of vehicle to be overtaken
+  //bool changing_lane = false;
+
+
+  /*probability of overtaking given overtaking is possible*/
+  /*we define overtaking is possible when a smaller vehicle can shift to a lane(s) on which no trace of the vehicle to be overtaken is found*/
+  /*for time being assume instantaneous breaking is possible:- Scenario is almost true for indian drivers xD*/
+
+  int velocity[2]={0,0};//velocity[0] is x_velocity and velocity[1] is y_velocity
+  //int lane_no;//represents lane on which top right corner of vehicle is
+
+  int pos[2] = {0,0};
+
+  //bool** road_matrix = on_road.road_matrix;
+
+  void changeVelocity(){/*lane changing and overtaking not yet coded */
+  //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
+//  cout<<"Initial Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
+     float p = getRandom();
+     //cout<<"Changing velocity for "<<type<<" and id "<<id<<endl;
+     if( *(on_road.signal_color) == 'R'){
+
+        p = 1;// to ensure no overtaking takes place when signal is red
+     }
+     int max_xvel = velocity[1]+max_acceleration;
+
+     if(max_xvel > max_xspeed)max_xvel = max_xspeed;
+
+     for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
+         for(int j = 1; j <= max_xvel ; j++){
+          if(j+pos[1]< on_road.length){/*i+pos[0]< on_road.width -> this part must be true*/
+
+              if(j+pos[1]>= on_road.signal_pos && *(on_road.signal_color) == 'R' && pos[1]<on_road.signal_pos){
+                max_xvel = j-1;
+              //  cout<<"making "<<type<<" "<<id<<" velocity "<<max_xvel<<endl;
+        //        cout<<"WAITING "<<type<<" "<<endl;
+
+                continue;
+              }
+
+              if(i+pos[0]>=on_road.width)continue;
+              if(on_road.road_matrix[i+pos[0]][j+pos[1]] != ' '){
+                max_xvel = j-1;
+                continue;
+              }
+         }
+       }
+     }
+
+
+     if(p > lane_change_freq && max_xvel!=0){// no lane_changing when max_xel!=0 and p says not to change
+        velocity[1]= max_xvel;
+         velocity[0]= 0;
+       //cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
+     }
+    else{//assuming for now, overtaking can take place at given speeds only. We need to account later on for variable overtaking speeds
+       //vehicle will plan to overtake if at current time there is no vehicle that could with max_xspeed  cause a collision
+
+        bool turn_right = true;
+
+        if( pos[0]+lanechange_vertical_speed+ width <=on_road.width && pos[0]+lanechange_vertical_speed>=0 ){
+            for(int i = pos[0]+lanechange_vertical_speed ; i< pos[0]+lanechange_vertical_speed+width;i++){
+              for(int j = pos[1]-length+1+lanechange_horizontal_speed;j <= pos[1]+lanechange_horizontal_speed;j++){
+                  if(j>=0 && j<on_road.length){
+                    if(i>=on_road.width)continue;
+                    if(on_road.road_matrix[i][j]!=' ' && on_road.road_matrix[i][j]!=symbol){
+                      turn_right = false;
+
+                      break;
+                    }
+                  }
+              }
+              if(turn_right==false)break;
+            }
+
+             if(turn_right){//checks if any other vehicle could crash into it assuming the max_xspeed of current vehicle
+
+                 // pos[0]+lanechange_vertical_speed   to pos[0]+lanechange_vertical_speed + width-1
+                /* for(int i = pos[0]+lanechange_vertical_speed; i< pos[0]+lanechange_vertical_speed+width;i++){
+                   for(int j = 1;j<=max_xspeed;j++){ OVERTAKING RULE BY ASSUMING THAT the j-limit is determined only by max_speed of overtaking vehicle and not vehicles behind them
+                     if(pos[1]-length+1+lanechange_horizontal_speed-max_xspeed>=0 && pos[1]-length+1+lanechange_horizontal_speed - max_xspeed < on_road.length){
+                        if(on_road.road_matrix[i][pos[1]-length+1+lanechange_horizontal_speed - max_xspeed]!=' '){
+                          to_overtake = false;
+                          break;
+                        }
+                      }  //O(n) in total
+                   }
+
+
+                   if(to_overtake==false)break;
+                 }*/
+
+                map<char,Vehicle*>::iterator sym_iter = on_road.symbol_maps.begin();
+                int x_left = pos[1]+lanechange_horizontal_speed -length + 1;
+                int x_right = pos[1]+lanechange_horizontal_speed;
+
+                int y_top = pos[0]+lanechange_vertical_speed;
+                int y_bottom = y_top + width -1;
+
+
+                for(sym_iter = on_road.symbol_maps.begin();sym_iter != on_road.symbol_maps.end();sym_iter++){
+                  // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+                   Vehicle* temp_veh = sym_iter->second;
+                   int vx_left = temp_veh -> pos[1] - length + 1;
+                   int vx_right = vx_left + temp_veh->velocity[1]+ temp_veh->max_acceleration;// we need to cover the entire rectangle possibilities: if temp_veh moves max fast or it halts: hence vx_left will be current position of left width
+                   int vx_top = temp_veh -> pos[0];
+                   int vx_bottom = vx_top + temp_veh -> width -1;
+
+                   //cout<<"LEFT:"<<x_left<<" "<<x_right<<" "<<y_top<<" "<<y_bottom<<endl;
+                   //cout<<vx_left<<" "<<vx_right<<" "<<vx_top<<" "<<vx_bottom<<endl;
+                   if( (vx_left - x_left)*(vx_left - x_right)<=0 || (vx_right - x_left)*(vx_right - x_right)<=0 ){
+                        if( (vx_top - y_top)*(vx_top - y_bottom) <=0 || (vx_bottom - y_top)*(vx_bottom-y_bottom)<=0){
+                          turn_right = false;
+
+                          break;
+                        }
+                   }
+                }
+
+             }
+
+         }
+        else turn_right = false;
+
+
+
+        bool turn_left = true;
+        if( pos[0] - lanechange_vertical_speed + width<=on_road.width && pos[0]-lanechange_vertical_speed>=0){
+            for(int i = pos[0]-lanechange_vertical_speed;i<pos[0]-lanechange_vertical_speed+width;i++){
+              for(int j = pos[1]-length+1+lanechange_horizontal_speed;j <= pos[1]+lanechange_horizontal_speed;j++){
+                  if(j>=0 && j<on_road.length){
+                    if(i>=on_road.width)continue;
+                    if(on_road.road_matrix[i][j]!=' ' && on_road.road_matrix[i][j]!=symbol){
+                      turn_left = false;
+
+                      break;
+                    }
+                  }
+              }
+              if(turn_left==false)break;
+            }
+
+           if(turn_left){
+                map<char,Vehicle*>::iterator sym_iter = on_road.symbol_maps.begin();
+                int x_left = pos[1]+lanechange_horizontal_speed -length + 1;
+                int x_right = pos[1]+lanechange_horizontal_speed;
+
+                int y_top = pos[0]-lanechange_vertical_speed;
+                int y_bottom = y_top + width -1;
+
+
+                for(sym_iter = on_road.symbol_maps.begin();sym_iter != on_road.symbol_maps.end();sym_iter++){
+                  // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+                   Vehicle* temp_veh = sym_iter->second;
+                   int vx_left = temp_veh -> pos[1] - length + 1;
+                   int vx_right = vx_left + temp_veh->velocity[1]+ temp_veh->max_acceleration;// we need to cover the entire rectangle possibilities: if temp_veh moves max fast or it halts: hence vx_left will be current position of left width
+                   int vx_top = temp_veh -> pos[0];
+                   int vx_bottom = vx_top + temp_veh -> width -1;
+
+                   //cout<<"LEFT:"<<x_left<<" "<<x_right<<" "<<y_top<<" "<<y_bottom<<endl;
+                   //cout<<vx_left<<" "<<vx_right<<" "<<vx_top<<" "<<vx_bottom<<endl;
+                   if( (vx_left - x_left)*(vx_left - x_right)<=0 || (vx_right - x_left)*(vx_right - x_right)<=0 ){
+                        if( (vx_top - y_top)*(vx_top - y_bottom) <=0 || (vx_bottom - y_top)*(vx_bottom-y_bottom)<=0){
+                          turn_left = false;
+
+                          break;
+                        }
+                   }
+                }
+
+             }
+
+        }
+        else turn_left = false;
+
+
+          float direction_prob = getRandom();
+          if(direction_prob > 0.5){
+            if(turn_right){turn_left = false;}
+          }
+          else{
+            if(turn_left){turn_right = false;}
+          }
+
+        if(turn_right && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos ) ) {
+          velocity[1]=lanechange_horizontal_speed;
+          velocity[0]=lanechange_vertical_speed;
+        }
+        else if(turn_left && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
+          velocity[1]=lanechange_horizontal_speed;
+          velocity[0]=-lanechange_vertical_speed;
+        }
+        else{
+          velocity[1] = max_xvel;
+          velocity[0]=0;
+        }
+      //  if(to_overtake)cout<<"Overtaking by "<<type<<endl;
+      //    else cout<<"NO overtaking "<<type<<endl;
+
+      //  cout<<type<<" velocity[0]:"<<velocity[0]<<" velocity[1]:"<<velocity[1]<<endl;
+    }
+//  cout<<"Changed Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
+  // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
+  }
+
+  void changePosition(){// changing position in unit times
+  //cout<<"entering changePosition"<<velocity[1]<<" "<<velocity[0]<<endl;
+   pos[0] = pos[0]  + velocity[0];
+   pos[1] = pos[1]  + velocity[1];
+   //cout<<"leaving changePosition: "<<endl;
+  }
+};
 
 
 void updateRoad(Road* rd){//function to update road matrix
@@ -92,7 +356,7 @@ void updateRoad(Road* rd){//function to update road matrix
     (iter->second)->changeVelocity();
   //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
   }
-
+  //cout<<"entering updateRoad 11"<<endl;
 
 
   std::vector<int> ids_to_remove;
@@ -100,11 +364,11 @@ void updateRoad(Road* rd){//function to update road matrix
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++)(iter->second)->changePosition();
   iter = rd->vehicles.begin();
 
-
+//cout<<"entering updateRoad 12"<<endl;
   for(int i = 0;i<rd->width;i++)
    for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
-
+  //cout<<"entering updateRoad 12"<<endl;
   for(iter = rd->vehicles.begin();iter!=rd->vehicles.end();iter++)
   {
 
@@ -124,7 +388,7 @@ void updateRoad(Road* rd){//function to update road matrix
          syms_to_remove.push_back(iter->second->symbol);
     }
   }
-
+  // cout<<"HAlf way update road"<<endl;
 
 
   vector<int>::iterator vec_iter = ids_to_remove.begin();
@@ -155,7 +419,7 @@ void updateRoad(Road* rd){//function to update road matrix
 }
 
 void printRoad(Road* rd){
-  cout<<"Signal Color:"<<rd->signal_color<<endl;
+  cout<<"Signal Color:"<<*(rd->signal_color)<<endl;
   for(int i = 0;i<2*rd->length;i++)cout<<"-";
   cout<<endl;
   for(int i= 0;i<rd->width;i++){
@@ -217,14 +481,16 @@ void updatePositionsOnRoad(Road* rd,bool print=false){
 void updateRoad(Road* road, int t,bool print){
     if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
     else{
-      cout<<"came to update road "<<endl;
+      //cout<<"came to update road "<<endl;
       for(int i=0;i<t;i++){
 
         updateRoad(road);
-        cout<<"road updated"<<endl;
-           std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        //cout<<"road updated"<<endl;
+           
 
       if(print)printRoad(road);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      system("clear");
         cout<<endl;
       }
 
@@ -311,12 +577,7 @@ int proc(int argc, char** argv)
   int vehicle_no=0;
   road.signal_pos = signal_pos;
 //  std::vector< Vehicle> vec_vehicle;
-  char** road_matrix = new char*[road_wid];
-  for(int i = 0;i<road_wid;i++){
-    road_matrix[i]=new char[road_len];
-   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
-  }
-  road.road_matrix = road_matrix;
+
   signal1=true;
   if(argc<2)
   {
@@ -508,6 +769,12 @@ int proc(int argc, char** argv)
             }
             *(road.signal_color)='R';
           }
+            char** road_matrix = new char*[road_wid];
+            for(int i = 0;i<road_wid;i++){
+              road_matrix[i]=new char[road_len];
+             for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
+            }
+            road.road_matrix = road_matrix;
         }
          catch(std::invalid_argument& e){
           cout<<"error in conversion of road"<<endl;}
@@ -517,12 +784,12 @@ int proc(int argc, char** argv)
     {
 
       string name, color="red";
-      cout<<"after start"<<endl;
-      int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0;
+      //cout<<"after start"<<endl;
+      int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0.111;
       for(auto it2=it1->begin();it2!=it1->end();it2++)
           {
             std::vector<std::string> attributes;
-            cout<<"Input: "<<*it2<<endl;
+            //cout<<"Input: "<<*it2<<endl;
             istringstream ss(*it2);
             while(ss)
             {
@@ -535,7 +802,7 @@ int proc(int argc, char** argv)
                 attributes.push_back(temp);
               }
             }
-            cout<<"Abnormal behavious "<<endl;
+            //cout<<"Abnormal behavious "<<endl;
             if(attributes[0].compare("Pass")==0)
             {
               try{updateRoad(&road,stoi(attributes[1]),true);}
@@ -544,7 +811,7 @@ int proc(int argc, char** argv)
 
               continue;
             }
-            cout<<"Abnormal behavious sads"<<endl;
+            //cout<<"Abnormal behavious sads"<<endl;
             if(attributes[0].compare("Signal")==0)
             {
 
@@ -564,7 +831,7 @@ int proc(int argc, char** argv)
               else
                 continue;
             }
-            cout<<"Abnormal behavious dfd"<<endl;
+            //cout<<"Abnormal behavious dfd"<<endl;
             template_vehicle to_load=find_in(attributes[0], all_vehicles);
             if(to_load.type.length()==0)      //no vehicle found
               {
@@ -581,7 +848,8 @@ int proc(int argc, char** argv)
               lnchangeh=to_load.lanechange_horizontal_speed;
               lnchangev=to_load.lanechange_vertical_speed;
               color=attributes[1];
-              cout<<"Abnormal behavious before error"<<endl;
+              //cout<<"Abnormal behavious before error"<<endl;
+              //cout<<"attributes size is "<<attributes.size()<<endl;
               try{
               if(attributes.size()>=4)
                {
@@ -605,17 +873,20 @@ int proc(int argc, char** argv)
                 }
                 catch(std::invalid_argument& e){
               cout<<"error in conversion of non existent "<<endl; return -1;}
-              map<int,Vehicle*>::iterator iter = road.vehicles.begin();
+              catch(std::out_of_range& e){
+              cout<<"error in conversion of something not present "<<endl; return -1;}
+              //cout<<"ewhy stop here?cs "<<endl;
+              auto iter = road.vehicles.begin();
             while(flag==false)
             {
                  std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
             }
-
+             //cout<<"ewhy stop here? "<<endl;
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,symbol_name++,lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
             while(true) //incomplete check for clash but it works assuming contagious vehicles
             {
-             updateRoad(&road,1,false);
+             updateRoad(&road,1,true);
               bool isEmpty = true;
                for(int i = lane_no;i<lane_no+width;i++){
                 for(int j =col_no;j<col_no+length;j++){
@@ -629,18 +900,18 @@ int proc(int argc, char** argv)
                 if(isEmpty == false)break;
               }
              if(isEmpty)break;
-             else updateRoad(&road,1,false);
+             else updateRoad(&road,1,true);
             }
             addVehicleOnRoad(temp_vehicle, &road);
             if(symbol_name==' ')
               symbol_name++;
             vehicle_no++;
-            cout<<"why"<<endl;
+           // cout<<"why"<<endl;
             //printRoad(&road);
-            updatePositionsOnRoad(&road,true);
-            cout<<"why1.5"<<endl;
+            updatePositionsOnRoad(&road,false);
+            //cout<<"why1.5"<<endl;
             updateRoad(&road,1,true);
-            cout<<"why2"<<endl;
+            //cout<<"why2"<<endl;
             }
 
           }
@@ -692,7 +963,7 @@ int proc(int argc, char** argv)
 
 void *main_calls(void *a)
 {
-  cout<<"here???? in main calls"<<endl;
+  //cout<<"here???? in main calls"<<endl;
   if(proc(no_arguments, names)==-1)
     {
       cout<<"error occured "<<endl;
@@ -722,6 +993,8 @@ float lx=-0.813357,lz=-0.581764f;
 // XZ position of the camera
 float x=-1.88822f,z=2.6549f;
 float y=10.0f;
+float blookx=0.0;
+float blooky=0.0;
 std::vector<Vehicle*> lanes;
 int plot_convert(char **roadi, int width, int length)
 {
@@ -735,8 +1008,13 @@ int plot_convert(char **roadi, int width, int length)
          {
             
             //cout<<"####!!!#####trying to find for symbol= "<<roadi[i][j]<<endl;
-            Vehicle *graph_vehicle=road.symbol_maps.at(roadi[i][j]);
-            lanes.push_back((graph_vehicle));
+            try{
+              Vehicle *graph_vehicle=road.symbol_maps.at(roadi[i][j]);
+            lanes.push_back((graph_vehicle));}
+               catch(std::out_of_range& e){
+              cout<<"error in conversion of non plot_convert "<<roadi[i][j]<<endl; return -1;}
+
+            
 
          }
          
@@ -792,7 +1070,7 @@ void changeSize(int w, int h) {
    // Get Back to the Modelview
    glMatrixMode(GL_MODELVIEW);
 }
-void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, bool flag=false)
+void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, bool flagff=false)
 {
     GLfloat x              = 0.0;
     GLfloat y              = 0.0;
@@ -800,7 +1078,7 @@ void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, boo
     GLfloat angle_stepsizepp = 0.1;
 
     /** Draw the tube */
-    if(flag==false){
+    if(flagff==false){
       glColor3f(R,G,B);
       glBegin(GL_QUAD_STRIP);
       angle = 0.0;
@@ -894,6 +1172,68 @@ glBegin(GL_QUADS);        // Draw The Cube Using quads
     glVertex3f( 0,0.0f, wid/2.0);    // Bottom Left Of The Quad (Right)
     glVertex3f( leng/2.0,0.0f,-wid/2.0);    // Bottom Right Of The Quad (Right)
   glEnd(); 
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f(leng/2.0, ht,-wid/2.0);
+    glVertex3f(0.0, ht,-wid/2.0);
+    
+
+  glEnd();
+   glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f(0, ht, wid/2.0);    // Bottom Left Of The Quad (Top)
+    glVertex3f( leng/2.0, ht, wid/2.0);    // Bottom Right Of The Quad (Top)
+    
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f( leng/2.0, ht/2, wid/2.0);    // Top Right Of The Quad (Front)
+    glVertex3f(-leng/2.0, ht/2, wid/2.0);    // Top Left Of The Quad (Front)
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f(0, ht, wid/2.0);    // Bottom Left Of The Quad (Top)
+    glVertex3f( leng/2.0, ht, wid/2.0);    // Bottom Right Of The Quad (Top)
+    
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+     glVertex3f(-leng/2.0, ht/2, wid/2.0);    // Top Left Of The Quad (Front)
+    glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Left Of The Quad (Front)
+    
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f(-leng/2.0, ht/2, wid/2.0);    // Top Left Of The Quad (Front)
+    glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Left Of The Quad (Front)
+    
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f(-leng/2.0,0, wid/2.0);    // Bottom Left Of The Quad (Front)
+    glVertex3f( leng/2.0,0, wid/2.0);    // Bottom Right Of The Quad (Front)
+
+  glEnd();
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f( leng/2.0, ht,-wid/2.0);  // Bottom Left Of The Quad (Front)
+    glVertex3f( leng/2.0,0.0f,-wid/2.0);   // Bottom Right Of The Quad (Front)
+   
+  glEnd();
+
+  glBegin(GL_LINES);
+    glColor3f(0,0,0);
+    glVertex3f( leng/2.0,0.0f,-wid/2.0);    // Top Left Of The Quad (Right)
+   glVertex3f( leng/2.0, ht,-wid/2.0);    // Bottom Left Of The Quad (Right)
+   
+  glEnd();
+
+
 }
 //float angle = 0.0f;
 
@@ -906,18 +1246,28 @@ void renderScene(void) {
    // Reset transformations
    glLoadIdentity();
    // Set the camera
-  gluLookAt(   x-15, y, z-15,
-         x-1.0+lx, 0.0f,  z-1.0+lz,
-         0.0f, 3.0f,  0.0f);
+  gluLookAt(   x-road_len/1.75+blookx, y, z-road_len/2.25+blooky,
+         x-1.0+lx, 0.0f,  z+1.0+lz,
+         0.0f, 10.0f,  0.0f);
 
 
         // Draw ground
-   glColor3f(0.9f, 0.9f, 0.9f);
+   glColor3f(0.6f, 0.7f, 0.7f);
    glBegin(GL_QUADS);
       glVertex3f(-road_len/2.0, -0.3f, -road_wid/2.0);
       glVertex3f(-road_len/2.0, -0.3f,  road_wid/2.0);
       glVertex3f( road_len/2.0, -0.3f,  road_wid/2.0);
       glVertex3f( road_len/2.0, -0.3f, -road_wid/2.0);
+      glColor3f(0.4f, 0.45f, 0.45f);
+      glVertex3f(-road_len/2.0, -0.5f, -road_wid/2.0);
+      glVertex3f(-road_len/2.0, -0.5f,  -road_wid/2.0-0.5);
+      glVertex3f( road_len/2.0, -0.5f,  -road_wid/2.0-0.5);
+      glVertex3f( road_len/2.0, -0.5f, -road_wid/2.0);
+      glColor3f(0.4f, 0.45f, 0.45f);
+      glVertex3f(-road_len/2.0, -0.5f, road_wid/2.0+0.5);
+      glVertex3f(-road_len/2.0, -0.5f,  road_wid/2.0);
+      glVertex3f( road_len/2.0, -0.5f,  road_wid/2.0);
+      glVertex3f( road_len/2.0, -0.5f, -road_wid/2.0+0.5);
    glEnd();
 
         // Draw 36 SnowMen
@@ -948,8 +1298,9 @@ void renderScene(void) {
    while(signal1==false)std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
    n=plot_convert(road_,w,l);
+   //cout<<"after plot convert"<<endl;
    glPushMatrix();
-   glTranslatef(0,0,-road_wid/2.0-3.0);
+   glTranslatef(road_len/2.0-road.signal_pos,0,-road_wid/2.0-3.0);
    draw_cylinder(0.2,8.0,0.4,0.4,0.4);
    
     glPopMatrix();
@@ -958,7 +1309,7 @@ void renderScene(void) {
       GLUquadric *quad;
       quad = gluNewQuadric();
       glPushMatrix();
-      glTranslatef(-1.0,6.5,-road_wid/2.0-3.3);
+      glTranslatef(road_len/2.0-road.signal_pos-1.0,6.5,-road_wid/2.0-3.3);
       glRotatef(90.0, 0.0f, 1.0f, 0.0f);
       gluDisk(quad,0.0,0.6,100.0,100.0);
       glPopMatrix();
@@ -969,7 +1320,7 @@ void renderScene(void) {
       GLUquadric *quad;
       quad = gluNewQuadric();
       glPushMatrix();
-      glTranslatef(-1.0,7.5,-road_wid/2.0-3.3);
+      glTranslatef(road_len/2.0-road.signal_pos-1.0,7.5,-road_wid/2.0-3.3);
       glRotatef(90.0, 0.0f, 1.0f, 0.0f);
       gluDisk(quad,0.0,0.6,100.0,100.0);
       glPopMatrix();
@@ -1094,10 +1445,26 @@ void processSpecialKeys(int key, int xx, int yy) {
          perspective_angle=perspective_angle-1.0;
          
          break;
+      case GLUT_KEY_F5:
+         blooky=blooky-0.1;
+         
+         break;
+      case GLUT_KEY_F6:
+         blooky=blooky+0.1;
+         
+         break;
+      case GLUT_KEY_F7:
+         blooky=blooky-0.1;
+         
+         break;
+      case GLUT_KEY_F8:
+         blooky=blooky+0.1;
+         
+         break;
    }
-   cout<<"angle is !!!!!!!!!!!!!!!!!!!!!!!!!!!"<<angle<<endl;
-   cout<<"x is !!!!!!!!!!!!!!!"<<x<<endl;
-   cout<<"z is !!!!!!!!!!!!!!"<<z<<endl;
+   //cout<<"angle is !!!!!!!!!!!!!!!!!!!!!!!!!!!"<<angle<<endl;
+   //cout<<"x is !!!!!!!!!!!!!!!"<<x<<endl;
+   //cout<<"z is !!!!!!!!!!!!!!"<<z<<endl;
    //cout<<angle<<endl;
 }
 void processNormalKeys(unsigned char key, int x, int y) {
@@ -1121,7 +1488,7 @@ int main(int argc, char **argv) {
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
    glutInitWindowPosition(100,100);
-   glutInitWindowSize(1200,1200);
+   glutInitWindowSize(1200,1200*(road_len/road_wid)/6);
    glutCreateWindow("Traffic Simulator");
    //std::cout<<"HERERERERE"<<std::endl;
    // register callbacks
