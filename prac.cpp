@@ -37,6 +37,7 @@ std::random_device random_gen;
 std::mt19937 gen(random_gen());
 std::uniform_real_distribution<>dis(0.0,1.0);
 bool flag=false;
+bool signal1=false;
 int present_time;
 int vehicle_id;
 int default_max_xspeed=3;
@@ -54,6 +55,23 @@ float default_lane_change_freq = 0.4;
 float getRandom(){
   return (float) dis(gen);
 };//returns a float between 0 to 1 in uniform distribution
+bool compareChar(char & c1, char & c2)
+{
+  if (c1 == c2)
+    return true;
+  else if (std::toupper(c1) == std::toupper(c2))
+    return true;
+  return false;
+}
+ 
+/*
+ * Case Insensitive String Comparision
+ */
+bool strcmpign(std::string & str1, std::string &str2)
+{
+  return ( (str1.size() == str2.size() ) &&
+       std::equal(str1.begin(), str1.end(), str2.begin(), &compareChar) );
+}
 class Vehicle;
 class Road{
 public:
@@ -77,7 +95,7 @@ public:
     type="";
     length=2;
     width=2;
-    symbol='\0';
+    symbol=' ';
     max_speed=default_max_xspeed;
     max_acceleration=default_max_acceleration;
     lanechange_vertical_speed=default_lanechange_vertical_speed;
@@ -455,10 +473,12 @@ void updatePositionsOnRoad(Road* rd,bool print=false){
 void updateRoad(Road* road, int t,bool print){
     if(t <=0 )cout<<"ERROR:Please enter valid time input"<<endl;
     else{
+      cout<<"came to update road "<<endl;
       for(int i=0;i<t;i++){
 
         updateRoad(road);
-           std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        cout<<"road updated"<<endl;
+           std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
       if(print)printRoad(road);
         cout<<endl;
@@ -553,6 +573,7 @@ int proc(int argc, char** argv)
    for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
   }
   road.road_matrix = road_matrix;
+  signal1=true;
   if(argc<2)
   {
     cout<<"Error: no config file passed"<<endl;
@@ -750,6 +771,7 @@ int proc(int argc, char** argv)
     {
 
       string name, color="red";
+      cout<<"after start"<<endl;
       int length=2, width=1, lane_no=0, col_no=0, max_speed=default_max_xspeed, max_acceleration=default_max_acceleration, lnchangeh=default_lanechange_horizontal_speed, lnchangev=default_lanechange_vertical_speed, v_vel=0, h_vel=0;float lchang_f=0;
       for(auto it2=it1->begin();it2!=it1->end();it2++)
           {
@@ -767,7 +789,7 @@ int proc(int argc, char** argv)
                 attributes.push_back(temp);
               }
             }
-
+            cout<<"Abnormal behavious "<<endl;
             if(attributes[0].compare("Pass")==0)
             {
               try{updateRoad(&road,stoi(attributes[1]),true);}
@@ -776,6 +798,7 @@ int proc(int argc, char** argv)
 
               continue;
             }
+            cout<<"Abnormal behavious sads"<<endl;
             if(attributes[0].compare("Signal")==0)
             {
 
@@ -783,6 +806,7 @@ int proc(int argc, char** argv)
 
               continue;
             }
+            cout<<"Abnormal behavious dfd"<<endl;
             template_vehicle to_load=find_in(attributes[0], all_vehicles);
             if(to_load.type.length()==0)      //no vehicle found
               {
@@ -799,6 +823,7 @@ int proc(int argc, char** argv)
               lnchangeh=to_load.lanechange_horizontal_speed;
               lnchangev=to_load.lanechange_vertical_speed;
               color=attributes[1];
+              cout<<"Abnormal behavious before error"<<endl;
               try{
               if(attributes.size()>=4)
                {
@@ -830,18 +855,30 @@ int proc(int argc, char** argv)
             }
 
             Vehicle *temp_vehicle=((createVehicle(name,color,length,width,name.at(0),lane_no,col_no,max_speed,max_acceleration,lnchangev,lnchangeh,v_vel, h_vel, lchang_f)));
-            while(road.road_matrix[lane_no][col_no]!=' '|road.road_matrix[lane_no+width-1][col_no+length-1]!=' ') //incomplete check for clash but it works assuming contagious vehicles
-            {
-             updateRoad(&road,1,false);
+            int occupy_width=lane_no+width-1;
+            int occupy_length=col_no+width-1;
+            if(occupy_length<0){
+              occupy_length=0;
             }
-
+            if(occupy_length>road_len){
+              occupy_length=road_len-1;
+            }
+              if(occupy_width>road_wid){
+              occupy_width=road_wid-1;
+            }
+            while(road.road_matrix[lane_no][col_no]!=' '&&road.road_matrix[occupy_length][occupy_width]!=' ')
+            {
+              updateRoad(&road,1,true);
+            }
             addVehicleOnRoad(temp_vehicle, &road);
 
             vehicle_no++;
             cout<<"why"<<endl;
             //printRoad(&road);
-            updatePositionsOnRoad(&road,false);
-            updateRoad(&road,1,false);
+            updatePositionsOnRoad(&road,true);
+            cout<<"why1.5"<<endl;
+            updateRoad(&road,1,true);
+            cout<<"why2"<<endl;
             }
 
           }
@@ -922,23 +959,28 @@ float lx=0.0f,lz=-1.0f;
 // XZ position of the camera
 float x=0.0f,z=0.0f;
 float y=18.0f;
+std::vector<Vehicle*> lanes;
 int plot_convert(char **roadi, int width, int length)
 {
    int size=0;
+   lanes.clear();
    for(int i=0;i<width;++i)
    {
       for(int j=0;j<length;++j)
       {
-         if (roadi[i][j]=='b'|roadi[i][j]=='c'|roadi[i][j]=='B')
+         if (roadi[i][j]!=' ')
          {
-            size++;
+            
+            //cout<<"####!!!#####trying to find for symbol= "<<roadi[i][j]<<endl;
+            Vehicle *graph_vehicle=road.symbol_maps.at(roadi[i][j]);
+            lanes.push_back((graph_vehicle));
 
          }
          
       }
    }
    //int size=(length)*(width)/2;
-   graphic_road=new float*[size+1];
+   /*graphic_road=new float*[size+1];
    for(int i=0;i<size;i++)
    {
       graphic_road[i]=new float[2];
@@ -950,8 +992,8 @@ int plot_convert(char **roadi, int width, int length)
       {
          if (roadi[i][j]=='b'|roadi[i][j]=='c'|roadi[i][j]=='B')
          {
-            graphic_road[cur_leng][0]=-(float)i-1;
-            graphic_road[cur_leng][1]=-(float)j-2;
+            graphic_road[cur_leng][0]=-(float)i;
+            graphic_road[cur_leng][1]=-(float)j;
             cur_leng++;
 
          }
@@ -959,8 +1001,8 @@ int plot_convert(char **roadi, int width, int length)
       }
    }
   
-
-   return cur_leng;
+ */
+   return size;
 
 }
 void changeSize(int w, int h) {
@@ -982,49 +1024,49 @@ void changeSize(int w, int h) {
    glViewport(0, 0, w, h);
 
    // Set the correct perspective.
-   gluPerspective(30.0f, ratio, 1.0f, 100.0f);
+   gluPerspective(30.0f, ratio*1.0, 2.5f, 30.0f);
 
    // Get Back to the Modelview
    glMatrixMode(GL_MODELVIEW);
 }
 
-void drawSnowMan() {
+void drawVehicle(float r, float g, float b) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
 
 // Draw Body
-  glBegin(GL_QUADS);        // Draw The Cube Using quads
-    glColor3f(0.0f,1.0f,0.0f);    // Color Blue
-    glVertex3f( 1.0f, 1.0f,-1.0f);    // Top Right Of The Quad (Top)
-    glVertex3f(-1.0f, 1.0f,-1.0f);    // Top Left Of The Quad (Top)
-    glVertex3f(-1.0f, 1.0f, 1.0f);    // Bottom Left Of The Quad (Top)
-    glVertex3f( 1.0f, 1.0f, 1.0f);    // Bottom Right Of The Quad (Top)
-    glColor3f(1.0f,0.5f,0.0f);    // Color Orange
-    glVertex3f( 1.0f,-1.0f, 1.0f);    // Top Right Of The Quad (Bottom)
-    glVertex3f(-1.0f,-1.0f, 1.0f);    // Top Left Of The Quad (Bottom)
-    glVertex3f(-1.0f,-1.0f,-1.0f);    // Bottom Left Of The Quad (Bottom)
-    glVertex3f( 1.0f,-1.0f,-1.0f);    // Bottom Right Of The Quad (Bottom)
-    glColor3f(1.0f,0.0f,0.0f);    // Color Red    
-    glVertex3f( 1.0f, 1.0f, 1.0f);    // Top Right Of The Quad (Front)
-    glVertex3f(-1.0f, 1.0f, 1.0f);    // Top Left Of The Quad (Front)
-    glVertex3f(-1.0f,-1.0f, 1.0f);    // Bottom Left Of The Quad (Front)
-    glVertex3f( 1.0f,-1.0f, 1.0f);    // Bottom Right Of The Quad (Front)
-    glColor3f(1.0f,1.0f,0.0f);    // Color Yellow
-    glVertex3f( 1.0f,-1.0f,-1.0f);    // Top Right Of The Quad (Back)
-    glVertex3f(-1.0f,-1.0f,-1.0f);    // Top Left Of The Quad (Back)
-    glVertex3f(-1.0f, 1.0f,-1.0f);    // Bottom Left Of The Quad (Back)
-    glVertex3f( 1.0f, 1.0f,-1.0f);    // Bottom Right Of The Quad (Back)
-    glColor3f(0.0f,0.0f,1.0f);    // Color Blue
-    glVertex3f(-1.0f, 1.0f, 1.0f);    // Top Right Of The Quad (Left)
-    glVertex3f(-1.0f, 1.0f,-1.0f);    // Top Left Of The Quad (Left)
-    glVertex3f(-1.0f,-1.0f,-1.0f);    // Bottom Left Of The Quad (Left)
-    glVertex3f(-1.0f,-1.0f, 1.0f);    // Bottom Right Of The Quad (Left)
-    glColor3f(1.0f,0.0f,1.0f);    // Color Violet
-    glVertex3f( 1.0f, 1.0f,-1.0f);    // Top Right Of The Quad (Right)
-    glVertex3f( 1.0f, 1.0f, 1.0f);    // Top Left Of The Quad (Right)
-    glVertex3f( 1.0f,-1.0f, 1.0f);    // Bottom Left Of The Quad (Right)
-    glVertex3f( 1.0f,-1.0f,-1.0f);    // Bottom Right Of The Quad (Right)
-  glEnd();         
+glBegin(GL_QUADS);        // Draw The Cube Using quads
+    glColor3f(r,b,g);    // Color Blue
+    glVertex3f( 0.5f, 0.5f,-0.5f);    // Top Right Of The Quad (Top)
+    glVertex3f(-0.5f, 0.5f,-0.5f);    // Top Left Of The Quad (Top)
+    glVertex3f(-0.5f, 0.5f, 0.0);    // Bottom Left Of The Quad (Top)
+    glVertex3f( 0.5f, 0.5f, 0);    // Bottom Right Of The Quad (Top)
+    glColor3f(r,b,g);      // Color Orange
+    glVertex3f( 0.5f,-0.5f, 0);    // Top Right Of The Quad (Bottom)
+    glVertex3f(-0.5f,-0.5f, 0);    // Top Left Of The Quad (Bottom)
+    glVertex3f(-0.5f,-0.5f,-0.5f);    // Bottom Left Of The Quad (Bottom)
+    glVertex3f( 0.5f,-0.5f,-0.5f);    // Bottom Right Of The Quad (Bottom)
+    glColor3f(r,b,g);      // Color Red    
+    glVertex3f( 0.5f, 0.5f, 0);    // Top Right Of The Quad (Front)
+    glVertex3f(-0.5f, 0.5f, 0);    // Top Left Of The Quad (Front)
+    glVertex3f(-0.5f,-0.5f, 0);    // Bottom Left Of The Quad (Front)
+    glVertex3f( 0.5f,-0.5f, 0);    // Bottom Right Of The Quad (Front)
+    glColor3f(r,b,g);      // Color Yellow
+    glVertex3f( 0.5f,-0.5f,-0.5f);    // Top Right Of The Quad (Back)
+    glVertex3f(-0.5f,-0.5f,-0.5f);    // Top Left Of The Quad (Back)
+    glVertex3f(-0.5f, 0.5f,-0.5f);    // Bottom Left Of The Quad (Back)
+    glVertex3f( 0.5f, 0.5f,-0.5f);    // Bottom Right Of The Quad (Back)
+    glColor3f(r,b,g);      // Color Blue
+    glVertex3f(-0.5f, 0.5f, 0);    // Top Right Of The Quad (Left)
+    glVertex3f(-0.5f, 0.5f,-0.5f);    // Top Left Of The Quad (Left)
+    glVertex3f(-0.5f,-0.5f,-0.5f);    // Bottom Left Of The Quad (Left)
+    glVertex3f(-0.5f,-0.5f, 0);    // Bottom Right Of The Quad (Left)
+    glColor3f(r,b,g);      // Color Violet
+    glVertex3f( 0.5f, 0.5f,-0.5f);    // Top Right Of The Quad (Right)
+    glVertex3f( 0.5f, 0.5f, 0);    // Top Left Of The Quad (Right)
+    glVertex3f( 0.5f,-0.5f, 0);    // Bottom Left Of The Quad (Right)
+    glVertex3f( 0.5f,-0.5f,-0.5f);    // Bottom Right Of The Quad (Right)
+  glEnd(); 
 }
 //float angle = 0.0f;
 
@@ -1037,26 +1079,26 @@ void renderScene(void) {
    // Reset transformations
    glLoadIdentity();
    // Set the camera
-  gluLookAt(   xc+x+10, y, zc+z+10,
-         -70.0f+10*lx, 0.0f,  -100.0f+10*lz,
+  gluLookAt(   x, y, z,
+         x+lx, 0.0f,  z+lz,
          0.0f, 3.0f,  0.0f);
 
 
         // Draw ground
    glColor3f(0.9f, 0.9f, 0.9f);
    glBegin(GL_QUADS);
-      glVertex3f(-20.0f, 0.0f, -100.0f);
-      glVertex3f(-20.0f, 0.0f,  100.0f);
-      glVertex3f( 20.0f, 0.0f,  100.0f);
-      glVertex3f( 20.0f, 0.0f, -100.0f);
+      glVertex3f(-road_len, 0.0f, -road_wid/2.0);
+      glVertex3f(-road_len, 0.0f,  road_wid/2.0);
+      glVertex3f( road_len, 0.0f,  road_wid/2.0);
+      glVertex3f( road_len, 0.0f, -road_wid/2.0);
    glEnd();
 
         // Draw 36 SnowMen
    
 
-   int w=5;
+   int w=road_wid;
    
-   int l=5;
+   int l=road_len;
          /*road_=new char*[l];
          for(int i=0;i<l;++i)
          {
@@ -1073,12 +1115,13 @@ void renderScene(void) {
     cout<<"waiting"<<endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
    }*/
-   cout<<"before plot convert"<<endl;
+   //cout<<"before plot convert"<<endl;
    //while(road.length<l)
-   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+   flag=true;
+   while(signal1==false)std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
    n=plot_convert(road_,w,l);
-   cout<<"after plot convert "<<endl;
+   //cout<<"after plot convert "<<endl;
    //graphic_road=new float*[5];
   /*for(int i=0;i<5;i++)
    {
@@ -1091,16 +1134,51 @@ void renderScene(void) {
    //{
    //std::cout<<"WHYYYYYY"<<std::endl;
    //std::cout<<n<<std::endl;
-   if(n!=0)
-      //std::cout<<graphic_road[0][0]<<"\t";
-   //}
-   for(int i=0; i<3;++i)
+   //cout<<"why here mate "<<endl;
+   //x
+   auto it=lanes.begin();
+   float r=0.0f, b=0.0f, g=0.0f;
+   string red_clr="red";
+   string green_clr="green";
+   string blue_clr="blue";
+   int i=0;
+   for(;it!=lanes.end();it++)
    {
-      glPushMatrix();
-      glTranslatef((graphic_road[i][0]-i)*2.0,0,(graphic_road[i][1]-i) * 15.0);
-      drawSnowMan();
-      glPopMatrix();
+    Vehicle temp=**it;
+    glPushMatrix();
+      //cout<<"before translate"<<endl;
+    glTranslatef(-temp.pos[1]+15.0-0.5,0,-temp.pos[0]-0.5+road_wid/2.0);
+    if(strcmpign(temp.color,red_clr))
+      {
+        r=1.0f;
+        g=0.25f;
+      }
+    else if(strcmpign(temp.color,green_clr))
+      {
+        g=0.8f;
+      }
+    else if(strcmpign(temp.color,blue_clr))
+      {
+        b=1.0f;
+        g=0.5f;
+      }
+    else 
+    {
+      r=1.0;
+      g=0.6;
+    }
+
+      //cout<<"before draw number i "<<i++<<"And vehicle is "<<temp.type<<endl;
+    drawVehicle(r,b,g);
+      //cout<<"before pop"<<endl;
+    glPopMatrix();
+    r=0.0;
+    b=0.0;
+    g=0.0;
+
+
    }
+
 
    /*for(int i = -5; i < 1; i++)
       for(int j=-5; j < 1; j++) {
@@ -1109,7 +1187,7 @@ void renderScene(void) {
          drawSnowMan();
          glPopMatrix();
       }*/
-
+   //cout<<"after plot convert yesh "<<endl;
    glutSwapBuffers();
 }
 
@@ -1145,7 +1223,8 @@ void processSpecialKeys(int key, int xx, int yy) {
          
          break;
    }
-   cout<<angle<<endl;
+   //cout<<"angle is !!!!!!!!!!!!!!!!!!!!!!!!!!!"<<angle<<endl;
+   //cout<<angle<<endl;
 }
 void processNormalKeys(unsigned char key, int x, int y) {
 
@@ -1163,25 +1242,25 @@ int main(int argc, char **argv) {
    glutInit(&argc, argv);
    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
    glutInitWindowPosition(100,100);
-   glutInitWindowSize(800,800);
-   glutCreateWindow("Lighthouse3D- GLUT Tutorial");
+   glutInitWindowSize(1200,1200*road_wid/road_len);
+   glutCreateWindow("Traffic Simulator");
    //std::cout<<"HERERERERE"<<std::endl;
    // register callbacks
    
    pthread_t threads;
    int rc;
    int i;
-   cout<<"here>???"<<endl;
+   //cout<<"here>???"<<endl;
     rc = pthread_create(&threads, NULL, main_calls, (void *)i);
       
       if (rc) {
          cout << "Error:unable to create thread," << rc << endl;
          exit(-1);
       }
-  cout<<"here>???"<<endl;
+  //cout<<"here>???"<<endl;
    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
    // enter GLUT event processing cycle
-   flag=true;
+   //flag=true;
    glutDisplayFunc(renderScene);
    glutReshapeFunc(changeSize);
    glutIdleFunc(renderScene);
