@@ -1,0 +1,60 @@
+README
+
+
+BACKEND
+
+Two classes are primarily being used to run the backend
+ i) Vehicle
+ ii) Road
+
+
+Vehicle Class
+ Vehicle class contains parameters such as id, type, color, length, width, symbol, road on which   vehicle is placed, max_speed, lane change speeds etc.
+Vehicle class consists of two functions
+
+  changeVelocity() -> This function updates the velocity of the vehicle according to following rules
+     1) Decide if we want to change lane (using random number genrator with uniform distribution). If we don't wan't to change lane then try to increase the velocity of the vehicle by add max_acceleration to it. If this velocity causes accident according to current position of other vehicles on the road, then give it the maximum velocity possible by avoiding the accidents.
+    
+    Over-taking takes place when we see a vehicle immediately ahead of us and overtaking were possible according to present situations of the road.   
+
+    We cancel our decision to change lane or overtake if according to present situation of the road, if other vehicles could by any means collide with us if they move straight. Hence accidents occur only when two vehicles simultaneously decide to change lane or overtake which occurs with very less probability ( if we set lane changing probability low).
+
+  
+  changePosition() -> This funciton just adds the velocity to the position and changes the position of velocity by unit time.
+
+Road Class:
+ Contains parameters such as road id, length, width etc. It also contains a road_matrix which is a character matrix, which will be used to print road on the terminal along with vehicle symbols.
+
+Helper Functions:
+ void updateRoad(road* rd)-> It updates the road by one unit time. We have taken care to remove the vehicles which leave the road
+
+ void printRoad(road* rd) -> prints the current position of road
+
+ void updatePositionsOnRoad(Road* rd, bool print = false)-> It updates positions of vehicles on road according to the pos[0] and pos[1] parameters of different vehicles on road. It does not cause any movement in time
+
+void  updateRoad(Road* road, int t , bool print)-> Updates position of road by time t. May print the road after each update on termincal depending upon the value of "bool print"
+  
+void addVehicleOnRoad(Vehicle* newVehicle, Road* rd)-> adds vehicle on the orad
+
+Vehicle* createVehicle( string type, string color , int length, int width, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq)-> creates vehicle with given parameters
+
+Vehicle* createVehicleOnRoad( string type, string color , int length, int width, Road* rd, char symbol,int lane_no,int column_no, int max_speed, int max_acceleration, int lanechange_vertical_speed, int lanechange_horizontal_speed, int ini_vertical_velocity, int ini_horizontal_velocity,float lane_change_freq) -> creates vehicle with given parameters and adds it on the given road
+
+
+
+
+FRONT END
+
+
+
+
+Configuration File
+
+
+
+
+
+
+
+
+
