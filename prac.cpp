@@ -23,8 +23,8 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <chrono>
 #include <thread>
 #include <cmath>
-//#include <GL/glut.h> //for linux
-#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
+#include <GL/glut.h> //for linux
+//#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
 //#include <GLUT/glew.h>
 //#include <GLFW/glfw3.h>
 //include <glad/glad.h>
@@ -48,12 +48,7 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #define GL_SILENCE_DEPRECATION
 
 using namespace std;
-float no_of_frames=100.0;
-int frame_counter =0;
-int seconds=100;
-float posx=0.0;
-float posy=0.0;
-
+float no_of_frames=10.0;
 int no_arguments=0;
 char **names;
 bool state=true;
@@ -678,7 +673,7 @@ void renderScene(void) {
           glVertex3f(start, -0.28f,  width_of_divider/2.0);
           glVertex3f( start-length_of_divider, -0.28f,  width_of_divider/2.0);
           glVertex3f( start-length_of_divider, -0.28f, -width_of_divider/2.0);
-          
+
         glEnd();}
     i=1-i;
     start=start-length_of_divider;
@@ -729,13 +724,13 @@ void renderScene(void) {
           glVertex3f(0, -0.24f,  startzc+width_of_divider/2.0);
           glVertex3f( -length_of_divider, -0.24f, startzc+ width_of_divider/2.0);
           glVertex3f( -length_of_divider, -0.24f, startzc-width_of_divider/2.0);
-          
+
         glEnd();}
     i=1-i;
     startzc=startzc-width_of_divider;
 
    }
-   
+
    glTranslatef(road_len/2.0-road.signal_pos,0,-road_wid/2.0-3.0);
    draw_cylinder(0.2,8.0,0.4,0.4,0.4);
 
@@ -789,20 +784,13 @@ void renderScene(void) {
    {
     Vehicle temp=**it;
     glPushMatrix();
-    if(frame_counter==0)
-     { posx=temp.pos[0];
-         posy=temp.pos[1];}
-    float temp_posx=temp.pos[0]+temp.velocity[0]*(frame_counter/no_of_frames);
-    float temp_posy=temp.pos[1]+temp.velocity[1]*(frame_counter/no_of_frames);
-
-
-    float yval=-temp_posy+road_len/2.0+temp.length;
-    float cordinatex= -temp_posx+(road_wid/2.0)-0.5;
+    float yval=-temp.pos[1]+road_len/2.0+temp.length;
+    float cordinatex= -temp.pos[0]+(road_wid/2.0)-0.5;
 
     float xval = cordinatex;
     glTranslatef(yval,0,xval);
-    int velocity_y=temp.velocity[0];
-    int velocity_x=temp.velocity[1];
+    int velocity_y=temp.velocity[1];
+    int velocity_x=temp.velocity[0];
     double angle_rotate=0.0;
     if( strcmping(temp.color,red_clr))
       {
@@ -834,17 +822,18 @@ void renderScene(void) {
       veh_height=1.5;
     if(velocity_y!=0&&velocity_x!=0)
     {
-      angle_rotate=180*(atan(velocity_y/velocity_x))/PI;
+      angle_rotate=180*(atan(velocity_x/velocity_y))/PI;
       (**it).is_tilted=true;
       (**it).veh_angle=angle_rotate;
 
 
     }
-    else if(velocity_y==0 && velocity_x!=0)
+    else if(velocity_y!=0 && velocity_x==0)
     {
       (**it).is_tilted=false;
       (**it).veh_angle=0.0;
     }
+    
 
 
 
@@ -857,18 +846,9 @@ void renderScene(void) {
     r=0.0;
     b=0.0;
     g=0.0;
-    std::this_thread::sleep_for(std::chrono::milliseconds(12));
+
 
    }
-    if(frame_counter==no_of_frames)
-    {
-      frame_counter=0;
-      posx=0;
-      posy=0;
-    }
-    frame_counter++;
-
-
 
    glutSwapBuffers();
 }
