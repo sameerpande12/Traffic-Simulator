@@ -19,7 +19,10 @@ using namespace std;
 class Road;
 
 void Vehicle::changeVelocity(){
-
+     if(crashed){
+       velocity[1]=velocity[0]=0;
+       return;
+     }
      float p = getRandom();
 
      int signalPosForVehicle = on_road->signal_pos;//new line added to ensure that the vehicle sees signal pos one ahead if it is bike (just to ensure it gets ahead of everyone)
@@ -186,8 +189,8 @@ void Vehicle::changeVelocity(){
 
 void Vehicle::changePosition(){
   // changing position in unit times
-  //cout<<"entering changePosition"<<velocity[1]<<" "<<velocity[0]<<endl;
+  if(!crashed){
    pos[0] = pos[0]  + velocity[0];
    pos[1] = pos[1]  + velocity[1];
-   //cout<<"leaving changePosition: "<<endl;
+  }
 }

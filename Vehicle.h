@@ -26,7 +26,7 @@ public:
   int width;
   char symbol;
   Road* on_road;//road on which vehicle is moving
-
+  bool crashed = false;
   //movement parameters
   int max_xspeed = 3;
   int max_acceleration = 1;

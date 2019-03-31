@@ -46,15 +46,15 @@ bool strcmping(std::string & str1, std::string &str2)
 
 
 void updateRoad(Road* rd){//function to update road matrix
-  //cout<<"entering updateRoad"<<endl;
+
   map<int,Vehicle*>::iterator iter = rd->vehicles.begin();
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++){
-  //  cout<<"before-Changing"<<iter->second.velocity[1]<<endl;;
-//  cout<<"On road: "<<iter->second->type<<" and id "<<iter->second->id<<endl;
+
+
     (iter->second)->changeVelocity();
-  //  cout<<"after-Changing"<<iter->second.velocity[1]<<endl;;
+
   }
-  //cout<<"entering updateRoad 11"<<endl;
+
 
 
   std::vector<int> ids_to_remove;
@@ -62,11 +62,11 @@ void updateRoad(Road* rd){//function to update road matrix
   for(iter = rd->vehicles.begin();iter!= rd->vehicles.end();iter++)(iter->second)->changePosition();
   iter = rd->vehicles.begin();
 
-//cout<<"entering updateRoad 12"<<endl;
+
   for(int i = 0;i<rd->width;i++)
    for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
-  //cout<<"entering updateRoad 12"<<endl;
+
   for(iter = rd->vehicles.begin();iter!=rd->vehicles.end();iter++)
   {
 
@@ -75,7 +75,15 @@ void updateRoad(Road* rd){//function to update road matrix
 
         if((iter->second)->pos[1]>=j && (iter->second)->pos[1]-j<rd->length){
           if(i+(iter->second)->pos[0]>=rd->width)continue;
+
+          if( rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j] !=' '){
+              iter->second->crashed = true;
+              rd->symbol_maps[rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]]->crashed = true;
+          }
+
           rd->road_matrix[i+(iter->second)->pos[0]][(iter->second)->pos[1]-j]=iter->second->symbol;
+
+
         }
 
 
@@ -86,34 +94,25 @@ void updateRoad(Road* rd){//function to update road matrix
          syms_to_remove.push_back(iter->second->symbol);
     }
   }
-  // cout<<"HAlf way update road"<<endl;
+
 
 
   vector<int>::iterator vec_iter = ids_to_remove.begin();
   for(vec_iter = ids_to_remove.begin();vec_iter<ids_to_remove.end();vec_iter++){
     rd->vehicles.erase(*vec_iter);
 
-    //cout<<"REMOVING:"<<*vec_iter<<endl;
+
   }
   vector<char>::iterator char_iter = syms_to_remove.begin();
   for(char_iter = syms_to_remove.begin();char_iter<syms_to_remove.end();char_iter++){
     rd->vehicles.erase(*char_iter);
 
-    //cout<<"REMOVING:"<<*char_iter<<endl;
+
   }
-//  cout<<"leaving UpdateRoad"<<endl;
+
   //updates the road by one unit time
   present_time++;
 
-  /*if(present_time %8 < 4){
-    *(rd->signal_color) = 'R';
-  }
-  else if(present_time%8==5){
-    *(rd->signal_color) = 'Y';
-  }
-  else{
-    *(rd->signal_color) = 'G';
-  }*/
 }
 void printRoad(Road* rd){
   cout<<"Signal Color:"<<*(rd->signal_color)<<endl;
@@ -140,16 +139,6 @@ void printRoad(Road* rd){
 
 void updatePositionsOnRoad(Road* rd,bool print=false){
 
-/*  if(present_time %8 < 4){
-    *(rd->signal_color) = 'R';
-  }
-  else if(present_time%8==5){
-    *(rd->signal_color) = 'Y';
-  }
-  else{
-    *(rd->signal_color) = 'G';
-  }
-*/
   for(int i = 0;i<rd->width;i++)
    for(int j = 0;j<rd->length;j++)rd->road_matrix[i][j]=' ';
 
