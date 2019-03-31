@@ -27,6 +27,8 @@ public:
   char symbol;
   Road* on_road;//road on which vehicle is moving
   bool crashed = false;
+  bool is_tilted = false;
+  double veh_angle=0.0;
   //movement parameters
   int max_xspeed = 3;
   int max_acceleration = 1;
