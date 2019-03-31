@@ -11,50 +11,19 @@
 #include <sstream>
 #include <chrono>
 #include <thread>
-//#include <GL/glut.h> for linux  // GLUT, includes glu.h and gl.h for mac
-//#include <GLUT/glew.h>
-#include <stdlib.h>
-#include <math.h>
-#include "Road.cpp"
-#include <iostream>class Vehicle{
-public:
+#include "Vehicle.h"
+#include "Road.h"
+using namespace std;
 
- //existential parameters
-  int id;//ids should be unique for all the vehicles
-  string type;
-  string color;
-  int length;
-  int width;
-  char symbol;
-  Road on_road;//road on which vehicle is moving
+class Road;
 
-  //movement parameters
-  int max_xspeed = 3;
-  int max_acceleration = 1;
-  float lane_change_freq = 0.5;
-  int lanechange_horizontal_speed = 1;
-  int lanechange_vertical_speed = 1;
-  //overtaking done only from right side of vehicle to be overtaken
-  //bool changing_lane = false;
-
-
-  /*probability of overtaking given overtaking is possible*/
-  /*we define overtaking is possible when a smaller vehicle can shift to a lane(s) on which no trace of the vehicle to be overtaken is found*/
-  /*for time being assume instantaneous breaking is possible:- Scenario is almost true for indian drivers xD*/
-
-  int velocity[2]={0,0};//velocity[0] is x_velocity and velocity[1] is y_velocity
-  //int lane_no;//represents lane on which top right corner of vehicle is
-
-  int pos[2] = {0,0};
-
-  //bool** road_matrix = on_road.road_matrix;
-
-  void changeVelocity(){/*lane changing and overtaking not yet coded */
+void Vehicle::changeVelocity(){
+  /*lane changing and overtaking not yet coded */
   //  cout<<"entering changeVelocity"<<velocity[1]<<" "<<velocity[0]<<endl;
 //  cout<<"Initial Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
      float p = getRandom();
      //cout<<"Changing velocity for "<<type<<" and id "<<id<<endl;
-     if( *(on_road.signal_color) == 'R'){
+     if( *(on_road->signal_color) == 'R'){
 
         p = 1;// to ensure no overtaking takes place when signal is red
      }
@@ -64,9 +33,9 @@ public:
 
      for(int i = 0; i<width ;i++){//ensures that driver takes maximum velocity possible so as to avoid collision
          for(int j = 1; j <= max_xvel ; j++){
-          if(j+pos[1]< on_road.length){/*i+pos[0]< on_road.width -> this part must be true*/
+          if(j+pos[1]< on_road->length){/*i+pos[0]< on_road->width -> this part must be true*/
 
-              if(j+pos[1]>= on_road.signal_pos && *(on_road.signal_color) == 'R' && pos[1]<on_road.signal_pos){
+              if(j+pos[1]>= on_road->signal_pos && *(on_road->signal_color) == 'R' && pos[1]<on_road->signal_pos){
                 max_xvel = j-1;
               //  cout<<"making "<<type<<" "<<id<<" velocity "<<max_xvel<<endl;
         //        cout<<"WAITING "<<type<<" "<<endl;
@@ -74,8 +43,8 @@ public:
                 continue;
               }
 
-              if(i+pos[0]>=on_road.width)continue;
-              if(on_road.road_matrix[i+pos[0]][j+pos[1]] != ' '){
+              if(i+pos[0]>=on_road->width)continue;
+              if(on_road->road_matrix[i+pos[0]][j+pos[1]] != ' '){
                 max_xvel = j-1;
                 continue;
               }
@@ -94,12 +63,12 @@ public:
 
         bool turn_right = true;
 
-        if( pos[0]+lanechange_vertical_speed+ width <=on_road.width && pos[0]+lanechange_vertical_speed>=0 ){
+        if( pos[0]+lanechange_vertical_speed+ width <=on_road->width && pos[0]+lanechange_vertical_speed>=0 ){
             for(int i = pos[0]+lanechange_vertical_speed ; i< pos[0]+lanechange_vertical_speed+width;i++){
               for(int j = pos[1]-length+1+lanechange_horizontal_speed;j <= pos[1]+lanechange_horizontal_speed;j++){
-                  if(j>=0 && j<on_road.length){
-                    if(i>=on_road.width)continue;
-                    if(on_road.road_matrix[i][j]!=' ' && on_road.road_matrix[i][j]!=symbol){
+                  if(j>=0 && j<on_road->length){
+                    if(i>=on_road->width)continue;
+                    if(on_road->road_matrix[i][j]!=' ' && on_road->road_matrix[i][j]!=symbol){
                       turn_right = false;
 
                       break;
@@ -114,8 +83,8 @@ public:
                  // pos[0]+lanechange_vertical_speed   to pos[0]+lanechange_vertical_speed + width-1
                 /* for(int i = pos[0]+lanechange_vertical_speed; i< pos[0]+lanechange_vertical_speed+width;i++){
                    for(int j = 1;j<=max_xspeed;j++){ OVERTAKING RULE BY ASSUMING THAT the j-limit is determined only by max_speed of overtaking vehicle and not vehicles behind them
-                     if(pos[1]-length+1+lanechange_horizontal_speed-max_xspeed>=0 && pos[1]-length+1+lanechange_horizontal_speed - max_xspeed < on_road.length){
-                        if(on_road.road_matrix[i][pos[1]-length+1+lanechange_horizontal_speed - max_xspeed]!=' '){
+                     if(pos[1]-length+1+lanechange_horizontal_speed-max_xspeed>=0 && pos[1]-length+1+lanechange_horizontal_speed - max_xspeed < on_road->length){
+                        if(on_road->road_matrix[i][pos[1]-length+1+lanechange_horizontal_speed - max_xspeed]!=' '){
                           to_overtake = false;
                           break;
                         }
@@ -126,7 +95,7 @@ public:
                    if(to_overtake==false)break;
                  }*/
 
-                map<char,Vehicle*>::iterator sym_iter = on_road.symbol_maps.begin();
+                map<char,Vehicle*>::iterator sym_iter = on_road->symbol_maps.begin();
                 int x_left = pos[1]+lanechange_horizontal_speed -length + 1;
                 int x_right = pos[1]+lanechange_horizontal_speed;
 
@@ -134,7 +103,7 @@ public:
                 int y_bottom = y_top + width -1;
 
 
-                for(sym_iter = on_road.symbol_maps.begin();sym_iter != on_road.symbol_maps.end();sym_iter++){
+                for(sym_iter = on_road->symbol_maps.begin();sym_iter != on_road->symbol_maps.end();sym_iter++){
                   // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
                    Vehicle* temp_veh = sym_iter->second;
                    int vx_left = temp_veh -> pos[1] - length + 1;
@@ -161,12 +130,12 @@ public:
 
 
         bool turn_left = true;
-        if( pos[0] - lanechange_vertical_speed + width<=on_road.width && pos[0]-lanechange_vertical_speed>=0){
+        if( pos[0] - lanechange_vertical_speed + width<=on_road->width && pos[0]-lanechange_vertical_speed>=0){
             for(int i = pos[0]-lanechange_vertical_speed;i<pos[0]-lanechange_vertical_speed+width;i++){
               for(int j = pos[1]-length+1+lanechange_horizontal_speed;j <= pos[1]+lanechange_horizontal_speed;j++){
-                  if(j>=0 && j<on_road.length){
-                    if(i>=on_road.width)continue;
-                    if(on_road.road_matrix[i][j]!=' ' && on_road.road_matrix[i][j]!=symbol){
+                  if(j>=0 && j<on_road->length){
+                    if(i>=on_road->width)continue;
+                    if(on_road->road_matrix[i][j]!=' ' && on_road->road_matrix[i][j]!=symbol){
                       turn_left = false;
 
                       break;
@@ -177,7 +146,7 @@ public:
             }
 
            if(turn_left){
-                map<char,Vehicle*>::iterator sym_iter = on_road.symbol_maps.begin();
+                map<char,Vehicle*>::iterator sym_iter = on_road->symbol_maps.begin();
                 int x_left = pos[1]+lanechange_horizontal_speed -length + 1;
                 int x_right = pos[1]+lanechange_horizontal_speed;
 
@@ -185,7 +154,7 @@ public:
                 int y_bottom = y_top + width -1;
 
 
-                for(sym_iter = on_road.symbol_maps.begin();sym_iter != on_road.symbol_maps.end();sym_iter++){
+                for(sym_iter = on_road->symbol_maps.begin();sym_iter != on_road->symbol_maps.end();sym_iter++){
                   // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
                    Vehicle* temp_veh = sym_iter->second;
                    int vx_left = temp_veh -> pos[1] - length + 1;
@@ -193,8 +162,6 @@ public:
                    int vx_top = temp_veh -> pos[0];
                    int vx_bottom = vx_top + temp_veh -> width -1;
 
-                   //cout<<"LEFT:"<<x_left<<" "<<x_right<<" "<<y_top<<" "<<y_bottom<<endl;
-                   //cout<<vx_left<<" "<<vx_right<<" "<<vx_top<<" "<<vx_bottom<<endl;
                    if( (vx_left - x_left)*(vx_left - x_right)<=0 || (vx_right - x_left)*(vx_right - x_right)<=0 ){
                         if( (vx_top - y_top)*(vx_top - y_bottom) <=0 || (vx_bottom - y_top)*(vx_bottom-y_bottom)<=0){
                           turn_left = false;
@@ -218,11 +185,11 @@ public:
             if(turn_left){turn_right = false;}
           }
 
-        if(turn_right && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos ) ) {
+        if(turn_right && !(pos[1]< on_road->signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road->signal_pos ) ) {
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=lanechange_vertical_speed;
         }
-        else if(turn_left && !(pos[1]< on_road.signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road.signal_pos )){
+        else if(turn_left && !(pos[1]< on_road->signal_pos  && pos[1]+lanechange_horizontal_speed>=on_road->signal_pos )){
           velocity[1]=lanechange_horizontal_speed;
           velocity[0]=-lanechange_vertical_speed;
         }
@@ -237,12 +204,12 @@ public:
     }
 //  cout<<"Changed Velocity of "<<type<<" "<<id<<" "<<velocity[1]<<endl;
   // cout<<"leaving changeVelocity: "<<velocity[1]<<" "<<velocity[0]<<endl;
-  }
+}
 
-  void changePosition(){// changing position in unit times
+void Vehicle::changePosition(){
+  // changing position in unit times
   //cout<<"entering changePosition"<<velocity[1]<<" "<<velocity[0]<<endl;
    pos[0] = pos[0]  + velocity[0];
    pos[1] = pos[1]  + velocity[1];
    //cout<<"leaving changePosition: "<<endl;
-  }
-};
+}
