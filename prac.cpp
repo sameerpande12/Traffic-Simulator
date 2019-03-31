@@ -22,6 +22,7 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <sstream>
 #include <chrono>
 #include <thread>
+#include <cmath>
 //#include <GL/glut.h> //for linux
 #include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
 //#include <GLUT/glew.h>
@@ -563,10 +564,15 @@ void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, boo
     glEnd();
 }
 
-void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0) {
+void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0, float rot_ang=0.0) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
+  if(rot_ang>0)
+  {
+    glRotatef(-rot_ang, 0.0f, 1.0f, 0.0f);
+    glTranslatef(1.0,0,0);
 
+  }
 // Draw Body
 glBegin(GL_QUADS);        // Draw The Cube Using quads
     glColor3f(r,b,g);    // Color Blue
@@ -703,7 +709,7 @@ void renderScene(void) {
    n=plot_convert(road_,w,l);
 
    glPushMatrix();
-   glTranslatef(road_len/2.0-road.signal_pos,0,road_wid/2.0-2.8);
+   glTranslatef(road_len/2.0-road.signal_pos+1.0,0,road_wid/2.0-2.8);
    float length_of_zc=2.5;
    float width_of_zc=0.3;
    float startzc=road_wid/2.0;
@@ -782,6 +788,9 @@ void renderScene(void) {
 
     float xval = cordinatex;
     glTranslatef(yval,0,xval);
+    int velocity_y=temp.velocity[1];
+    int velocity_x=temp.velocity[0];
+    double angle_rotate=0.0;
     if( strcmping(temp.color,red_clr))
       {
         r=1.0f;
@@ -810,10 +819,18 @@ void renderScene(void) {
       veh_height=3.5;
     else if( strcmping(temp.type, bikstr))
       veh_height=1.5;
+    if(velocity_y!=0&&velocity_x!=0)
+    {
+      angle_rotate=180*(atan(velocity_y/velocity_x))/PI;
+
+    }
 
 
 
-    drawVehicle(r,b,g,temp.length/1.35,temp.width/1.35,veh_height);
+
+
+
+    drawVehicle(r,b,g,temp.length/1.35,temp.width/1.35,veh_height, angle_rotate);
 
     glPopMatrix();
     r=0.0;
