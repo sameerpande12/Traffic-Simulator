@@ -13,6 +13,7 @@
 #include <thread>
 #include "Vehicle.h"
 #include "Road.h"
+#include "common.h"
 using namespace std;
 
 class Road;
