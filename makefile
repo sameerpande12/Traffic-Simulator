@@ -17,4 +17,4 @@ Vehicle.o: Vehicle.cpp Vehicle.h common.cpp common.h Road.cpp Road.h
 common.o : common.cpp common.h
 	g++ -c common.cpp
 clean:
-	rm *.o exe
+	rm *.o *.gch exe
