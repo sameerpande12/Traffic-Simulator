@@ -26,7 +26,7 @@ void Vehicle::changeVelocity(){
      float p = getRandom();
 
      int signalPosForVehicle = on_road->signal_pos;//new line added to ensure that the vehicle sees signal pos one ahead if it is bike (just to ensure it gets ahead of everyone)
-     if( width==1 )signalPosForVehicle++;
+     if( width==1 )signalPosForVehicle++;//bikes show tendency to stay one step ahead in signal
 
      if( *(on_road->signal_color) == 'R'){
 
@@ -64,6 +64,7 @@ void Vehicle::changeVelocity(){
        //vehicle will plan to overtake if at current time there is no vehicle that could with max_xspeed  cause a collision
 
         bool turn_right = true;
+        bool turn_right_withz = true;
 
         if( pos[0]+lanechange_vertical_speed+ width <=on_road->width && pos[0]+lanechange_vertical_speed>=0 ){
             for(int i = pos[0]+lanechange_vertical_speed ; i< pos[0]+lanechange_vertical_speed+width;i++){
@@ -113,8 +114,57 @@ void Vehicle::changeVelocity(){
         else turn_right = false;
 
 
+        if( pos[0]+lanechange_vertical_speed+ width <=on_road->width && pos[0]+lanechange_vertical_speed>=0 ){
+            for(int i = pos[0]+lanechange_vertical_speed ; i< pos[0]+lanechange_vertical_speed+width;i++){
+              for(int j = pos[1]-length+1;j <= pos[1];j++){
+                  if(j>=0 && j<on_road->length){
+                    if(i>=on_road->width)continue;
+                    if(on_road->road_matrix[i][j]!=' ' && on_road->road_matrix[i][j]!=symbol){
+                      turn_right_withz = false;
+
+                      break;
+                    }
+                  }
+              }
+              if(turn_right_withz==false)break;
+            }
+
+             if(turn_right_withz){//checks if any other vehicle could crash into it assuming the max_xspeed of current vehicle
+
+                map<char,Vehicle*>::iterator sym_iter = on_road->symbol_maps.begin();
+                int x_left = pos[1] -length + 1;
+                int x_right = pos[1];
+
+                int y_top = pos[0]+lanechange_vertical_speed;
+                int y_bottom = y_top + width -1;
+
+
+                for(sym_iter = on_road->symbol_maps.begin();sym_iter != on_road->symbol_maps.end();sym_iter++){
+                  // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+                   Vehicle* temp_veh = sym_iter->second;
+                   int vx_left = temp_veh -> pos[1] - length + 1;
+                   int vx_right = vx_left + temp_veh->velocity[1]+ temp_veh->max_acceleration;// we need to cover the entire rectangle possibilities: if temp_veh moves max fast or it halts: hence vx_left will be current position of left width
+                   int vx_top = temp_veh -> pos[0];
+                   int vx_bottom = vx_top + temp_veh -> width -1;
+
+                   if( (vx_left - x_left)*(vx_left - x_right)<=0 || (vx_right - x_left)*(vx_right - x_right)<=0 ){
+                        if( (vx_top - y_top)*(vx_top - y_bottom) <=0 || (vx_bottom - y_top)*(vx_bottom-y_bottom)<=0){
+                          turn_right_withz = false;
+
+                          break;
+                        }
+                   }
+                }
+
+             }
+
+         }
+        else turn_right_withz = false;
+
 
         bool turn_left = true;
+        bool turn_left_withz = true;
+
         if( pos[0] - lanechange_vertical_speed + width<=on_road->width && pos[0]-lanechange_vertical_speed>=0){
             for(int i = pos[0]-lanechange_vertical_speed;i<pos[0]-lanechange_vertical_speed+width;i++){
               for(int j = pos[1]-length+1+lanechange_horizontal_speed;j <= pos[1]+lanechange_horizontal_speed;j++){
@@ -162,9 +212,57 @@ void Vehicle::changeVelocity(){
         else turn_left = false;
 
 
+        if( pos[0] - lanechange_vertical_speed + width<=on_road->width && pos[0]-lanechange_vertical_speed>=0){
+            for(int i = pos[0]-lanechange_vertical_speed;i<pos[0]-lanechange_vertical_speed+width;i++){
+              for(int j = pos[1]-length+1;j <= pos[1];j++){
+                  if(j>=0 && j<on_road->length){
+                    if(i>=on_road->width)continue;
+                    if(on_road->road_matrix[i][j]!=' ' && on_road->road_matrix[i][j]!=symbol){
+                      turn_left_withz = false;
+
+                      break;
+                    }
+                  }
+              }
+              if(turn_left_withz==false)break;
+            }
+
+           if(turn_left_withz){
+                map<char,Vehicle*>::iterator sym_iter = on_road->symbol_maps.begin();
+                int x_left = pos[1]-length + 1;
+                int x_right = pos[1];
+
+                int y_top = pos[0]-lanechange_vertical_speed;
+                int y_bottom = y_top + width -1;
+
+
+                for(sym_iter = on_road->symbol_maps.begin();sym_iter != on_road->symbol_maps.end();sym_iter++){
+                  // if we reach here we can be sure that there is no overlap between sym_iter->second vehicle and (this) vehicle.
+                   Vehicle* temp_veh = sym_iter->second;
+                   int vx_left = temp_veh -> pos[1] - length + 1;
+                   int vx_right = vx_left + temp_veh->velocity[1]+ temp_veh->max_acceleration;// we need to cover the entire rectangle possibilities: if temp_veh moves max fast or it halts: hence vx_left will be current position of left width
+                   int vx_top = temp_veh -> pos[0];
+                   int vx_bottom = vx_top + temp_veh -> width -1;
+
+                   if( (vx_left - x_left)*(vx_left - x_right)<=0 || (vx_right - x_left)*(vx_right - x_right)<=0 ){
+                        if( (vx_top - y_top)*(vx_top - y_bottom) <=0 || (vx_bottom - y_top)*(vx_bottom-y_bottom)<=0){
+                          turn_left_withz = false;
+
+                          break;
+                        }
+                   }
+                }
+
+             }
+
+        }
+        else turn_left_withz = false;
+
+
           float direction_prob = getRandom();
           if(direction_prob > 0.5){
             if(turn_right){turn_left = false;}
+
           }
           else{
             if(turn_left){turn_right = false;}
@@ -179,8 +277,24 @@ void Vehicle::changeVelocity(){
           velocity[0]=-lanechange_vertical_speed;
         }
         else{
+          if(max_xvel ==0){
+             if(turn_right_withz){
+               velocity[1]=0;
+               velocity[0]=lanechange_vertical_speed;
+             }
+             else if(turn_left_withz){
+               velocity[1]=0;
+               velocity[0]= -lanechange_vertical_speed;
+             }
+             else{
+               velocity[1]=velocity[0]=0;
+             }
+
+          }
+          else{
           velocity[1] = max_xvel;
           velocity[0]=0;
+         }
         }
 
     }
