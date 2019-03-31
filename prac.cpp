@@ -823,15 +823,15 @@ void renderScene(void) {
     if(velocity_y!=0&&velocity_x!=0)
     {
       angle_rotate=180*(atan(velocity_y/velocity_x))/PI;
-      *it->is_tilted=true;
-      *it->veh_angle=angle_rotate;
+      (**it).is_tilted=true;
+      (**it).veh_angle=angle_rotate;
 
 
     }
     else if(velocity_y==0 && velocity_x!=0)
     {
-      *it->is_tilted=false;
-      *it->veh_angle=0.0;
+      (**it).is_tilted=false;
+      (**it).veh_angle=0.0;
     }
 
 
@@ -839,7 +839,7 @@ void renderScene(void) {
 
 
 
-    drawVehicle(r,b,g,temp.length/1.35,temp.width/1.35,veh_height, *it->veh_angle);
+    drawVehicle(r,b,g,temp.length/1.35,temp.width/1.35,veh_height, (**it).veh_angle);
 
     glPopMatrix();
     r=0.0;
