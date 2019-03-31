@@ -1,4 +1,4 @@
-
+#pragma once
 #include <any>
 #include <cstring>
 #include <string>
