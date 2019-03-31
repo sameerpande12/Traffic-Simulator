@@ -50,5 +50,23 @@ extern int road_wid ;
 extern char symbol_name;
 extern float default_lane_change_freq ;
 
+extern int CurrentWidth;
+extern int CurrentHeight;
+extern float **graphic_road;
+extern char **road_; // we need to make this the char array which takes in input from the simulator
+extern float angle;
+extern float red;
+extern float green;
+extern float blue ;
+extern float xc, zc;
+extern float perspective_angle;
+// actual vector representing the camera's direction
+extern float lx,lz;
+// XZ position of the camera
+extern float x,y,z;
+
+extern float blookx;
+extern float blooky;
+
 
 float getRandom();

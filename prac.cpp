@@ -33,6 +33,9 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <math.h>
 #include <iostream>
 
+
+
+#include "processKeys.h"
 #include "common.h"
 #include "Road.h"
 #include "template.h"
@@ -407,42 +410,6 @@ int proc(int argc, char** argv)
   return 0;
 }
 
-/*int main(int argc, char** argv){
-  present_time = 1;//initiating the time
-  vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
-
-
-
-
-  Road road;
-  road.length = road_len;
-  road.width = road_wid;
-  road.id = 1;
-  road.signal_pos = signal_pos;
-  char** road_matrix = new char*[road_wid];
-  for(int i = 0;i<road_wid;i++){
-    road_matrix[i]=new char[road_len];
-   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
-  }
-  road.road_matrix = road_matrix;
-
-  queue<Vehicle> entry_queue;
-
-
-  Vehicle mycar = createVehicle("car","red",2,2,'c',0,0,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
-  Vehicle bike = createVehicle("bike","red",3,1,'b',0,3,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
-
-  addVehicleOnRoad(&mycar, &road);
-  addVehicleOnRoad(&bike, &road);
-
-
-  updatePositionsOnRoad(&road,true);
-
-
-  updateRoad(&road,4,true);
-
-}*/
-
 void *main_calls(void *a)
 {
   //cout<<"here???? in main calls"<<endl;
@@ -489,7 +456,7 @@ int plot_convert(char **roadi, int width, int length)
          if (roadi[i][j]!=' ')
          {
 
-            //cout<<"####!!!#####trying to find for symbol= "<<roadi[i][j]<<endl;
+
             try{
               Vehicle *graph_vehicle=road.symbol_maps.at(roadi[i][j]);
             lanes.push_back((graph_vehicle));}
@@ -502,29 +469,6 @@ int plot_convert(char **roadi, int width, int length)
 
       }
    }
-   //int size=(length)*(width)/2;
-   /*graphic_road=new float*[size+1];
-   for(int i=0;i<size;i++)
-   {
-      graphic_road[i]=new float[2];
-   }
-   int cur_leng=0;
-   for(int i=0;i<length;++i)
-   {
-      for(int j=0;j<width;++j)
-      {
-         if (roadi[i][j]=='b'|roadi[i][j]=='c'|roadi[i][j]=='B')
-         {
-            graphic_road[cur_leng][0]=-(float)i;
-            graphic_road[cur_leng][1]=-(float)j;
-            cur_leng++;
-
-         }
-
-      }
-   }
-
- */
    return size;
 
 }
@@ -552,6 +496,7 @@ void changeSize(int w, int h) {
    // Get Back to the Modelview
    glMatrixMode(GL_MODELVIEW);
 }
+
 void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, bool flagff=false)
 {
     GLfloat x              = 0.0;
@@ -617,6 +562,7 @@ void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, boo
     }
     glEnd();
 }
+
 void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
@@ -693,7 +639,7 @@ void renderScene(void) {
       glVertex3f( road_len/2.0, -0.4f, -road_wid/2.0+8.5);
    glEnd();
 
-        // Draw 36 SnowMen
+
 
 
    int w=road_wid;
@@ -721,7 +667,7 @@ void renderScene(void) {
    while(signal1==false)std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
    n=plot_convert(road_,w,l);
-   //cout<<"after plot convert"<<endl;
+
    glPushMatrix();
    glTranslatef(road_len/2.0-road.signal_pos,0,-road_wid/2.0-3.0);
    draw_cylinder(0.2,8.0,0.4,0.4,0.4);
@@ -776,7 +722,7 @@ void renderScene(void) {
    {
     Vehicle temp=**it;
     glPushMatrix();
-      //cout<<"before translate"<<endl;
+
     glTranslatef(-temp.pos[1]+road_len/2.0+0.5,0,-temp.pos[0]+2.5-temp.width+road_wid/2.0);
     if( strcmping(temp.color,red_clr))
       {
@@ -806,9 +752,9 @@ void renderScene(void) {
       veh_height=1.5;
 
 
-      //cout<<"before draw number i "<<i++<<"And vehicle is "<<temp.type<<endl;
+
     drawVehicle(r,b,g,temp.length/1.5,temp.width/1.5,veh_height);
-      //cout<<"before pop"<<endl;
+
     glPopMatrix();
     r=0.0;
     b=0.0;
@@ -817,88 +763,7 @@ void renderScene(void) {
 
    }
 
-
-   /*for(int i = -5; i < 1; i++)
-      for(int j=-5; j < 1; j++) {
-         glPushMatrix();
-         glTranslatef(i*10.0,0,j * 10.0);
-         drawSnowMan();
-         glPopMatrix();
-      }*/
-   //cout<<"after plot convert yesh "<<endl;
    glutSwapBuffers();
-}
-
-void processSpecialKeys(int key, int xx, int yy) {
-
-   float fraction = 0.1f;
-
-   switch (key) {
-      case GLUT_KEY_LEFT :
-         angle -= 0.01f;
-         lx = sin(angle);
-         lz = -cos(angle);
-         break;
-      case GLUT_KEY_RIGHT :
-         angle += 0.01f;
-         lx = sin(angle);
-         lz = -cos(angle);
-         break;
-      case GLUT_KEY_UP :
-         x += lx * fraction;
-         z += lz * fraction;
-         break;
-      case GLUT_KEY_DOWN :
-         x -= lx * fraction;
-         z -= lz * fraction;
-         break;
-      case GLUT_KEY_F1:
-         y=y+0.05;
-
-         break;
-      case GLUT_KEY_F2:
-         y=y-0.05;
-
-         break;
-      case GLUT_KEY_F3:
-         perspective_angle=perspective_angle+1.0;
-
-         break;
-      case GLUT_KEY_F4:
-         perspective_angle=perspective_angle-1.0;
-
-         break;
-      case GLUT_KEY_F5:
-         blooky=blooky-0.1;
-
-         break;
-      case GLUT_KEY_F6:
-         blooky=blooky+0.1;
-
-         break;
-      case GLUT_KEY_F7:
-         blooky=blooky-0.1;
-
-         break;
-      case GLUT_KEY_F8:
-         blooky=blooky+0.1;
-
-         break;
-   }
-   //cout<<"angle is !!!!!!!!!!!!!!!!!!!!!!!!!!!"<<angle<<endl;
-   //cout<<"x is !!!!!!!!!!!!!!!"<<x<<endl;
-   //cout<<"z is !!!!!!!!!!!!!!"<<z<<endl;
-   //cout<<angle<<endl;
-}
-void processNormalKeys(unsigned char key, int x, int y) {
-
-   if (key == 'q')
-      exit(0);
-    else if(key =='a')
-      perspective_angle=perspective_angle+1.0;
-    else if(key== 'd')
-      perspective_angle=perspective_angle-1.0;
-
 }
 
 
@@ -913,20 +778,19 @@ int main(int argc, char **argv) {
    glutInitWindowPosition(100,100);
    glutInitWindowSize(1200,1200*(road_len/road_wid)/6);
    glutCreateWindow("Traffic Simulator");
-   //std::cout<<"HERERERERE"<<std::endl;
    // register callbacks
 
    pthread_t threads;
    int rc;
    int i;
-   //cout<<"here>???"<<endl;
+
     rc = pthread_create(&threads, NULL, main_calls, (void *)i);
 
       if (rc) {
          cout << "Error:unable to create thread," << rc << endl;
          exit(-1);
       }
-  //cout<<"here>???"<<endl;
+
    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
    // enter GLUT event processing cycle
    //flag=true;
@@ -945,38 +809,3 @@ int main(int argc, char **argv) {
 
    return 1;
 }
-/*int main(int argc, char** argv){
-  present_time = 1;//initiating the time
-  vehicle_id = 1;// initiating vehicle_id: each vehicle has its own id
-
-
-
-
-  Road road;
-  road.length = road_len;
-  road.width = road_wid;
-  road.id = 1;
-  road.signal_pos = signal_pos;
-  char** road_matrix = new char*[road_wid];
-  for(int i = 0;i<road_wid;i++){
-    road_matrix[i]=new char[road_len];
-   for(int j = 0;j<road_len;j++)road_matrix[i][j]=' ';
-  }
-  road.road_matrix = road_matrix;
-
-  queue<Vehicle> entry_queue;
-
-
-  Vehicle mycar = createVehicle("car","red",2,2,'c',0,0,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
-  Vehicle bike = createVehicle("bike","red",3,1,'b',0,3,default_max_xspeed,default_max_acceleration,default_lanechange_vertical_speed,default_lanechange_horizontal_speed,default_vertical_velocity, default_horizontal_velocity, default_lane_change_freq);
-
-  addVehicleOnRoad(&mycar, &road);
-  addVehicleOnRoad(&bike, &road);
-
-
-  updatePositionsOnRoad(&road,true);
-
-
-  updateRoad(&road,4,true);
-
-}*/
