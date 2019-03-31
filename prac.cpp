@@ -22,8 +22,9 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #include <sstream>
 #include <chrono>
 #include <thread>
-#include <GL/glut.h> //for linux
-//#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
+#include <cmath>
+//#include <GL/glut.h> //for linux
+#include <GLUT/glut.h>  // GLUT, includes glu.h and gl.h for mac
 //#include <GLUT/glew.h>
 //#include <GLFW/glfw3.h>
 //include <glad/glad.h>
@@ -563,42 +564,52 @@ void draw_cylinder(GLfloat radius, GLfloat height, float R,float G, float B, boo
     glEnd();
 }
 
-void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0) {
+void drawVehicle(float r, float g, float b, float leng=1.0, float wid=1.0, float ht=1.0, float rot_ang=0.0) {
 
   glColor3f(1.0f, 1.0f, 1.0f);
+  if(rot_ang>0)
+  {
+    glRotatef(-rot_ang, 0.0f, 1.0f, 0.0f);
+    glTranslatef(1.0,0,0);
 
+  }
 // Draw Body
 glBegin(GL_QUADS);        // Draw The Cube Using quads
     glColor3f(r,b,g);    // Color Blue
-    glVertex3f( leng/2.0, ht,0);    // Top Right Of The Quad (Top)
-    glVertex3f(0.0, ht,0);    // Top Left Of The Quad (Top)
-    glVertex3f(0, ht, wid);    // Bottom Left Of The Quad (Top)
-    glVertex3f( leng/2.0, ht, wid);    // Bottom Right Of The Quad (Top)
+    glVertex3f( 0, ht,-wid);    // Top Right Of The Quad (Top)
+    glVertex3f(-leng/2.0, ht,-wid);    // Top Left Of The Quad (Top)
+    glVertex3f(-leng/2.0, ht, 0);    // Bottom Left Of The Quad (Top)
+    glVertex3f( 0, ht, 0);    // Bottom Right Of The Quad (Top)
+    glColor3f(r,b,g);    // Color Blue
+    glVertex3f( 0, ht,-wid);    // Top Right Of The Quad (Tf)
+    glVertex3f(-leng/2.0, ht/2,-wid);    // Top Left Of The Quad (Tf)
+    glVertex3f(-leng/2.0, ht/2, -0);    // Bottom Left Of The Quad (Tf)
+    glVertex3f( 0, ht, -0);    // Bottom Right Of The Quad (Tf)
     glColor3f(r,b,g);      // Color Orange
-    glVertex3f( leng/2.0,0.0f, wid);    // Top Right Of The Quad (Bottom)
-    glVertex3f(-leng/2.0,0, wid);    // Top Left Of The Quad (Bottom)
-    glVertex3f(-leng/2.0,0,0);    // Bottom Left Of The Quad (Bottom)
-    glVertex3f( leng/2.0,0,0);    // Bottom Right Of The Quad (Bottom)
+    glVertex3f( 0,0.0f, -0);    // Top Right Of The Quad (Bottom)
+    glVertex3f(-leng,0, -0);    // Top Left Of The Quad (Bottom)
+    glVertex3f(-leng,0,-wid);    // Bottom Left Of The Quad (Bottom)
+    glVertex3f( 0,0,-wid);    // Bottom Right Of The Quad (Bottom)
     glColor3f(r,b,g);      // Color Red
-    glVertex3f( leng/2.0, ht/2, wid);    // Top Right Of The Quad (Front)
-    glVertex3f(-leng/2.0, ht/2, wid);    // Top Left Of The Quad (Front)
-    glVertex3f(-leng/2.0,0, wid);    // Bottom Left Of The Quad (Front)
-    glVertex3f( leng/2.0,0, wid);    // Bottom Right Of The Quad (Front)
+    glVertex3f( 0, ht/2, -0);    // Top Right Of The Quad (Front)
+    glVertex3f(-leng, ht/2, -0);    // Top Left Of The Quad (Front)
+    glVertex3f(-leng,0, -0);    // Bottom Left Of The Quad (Front)
+    glVertex3f( 0,0, -0);    // Bottom Right Of The Quad (Front)
     glColor3f(r,b,g);      // Color Yellow
-    glVertex3f( leng/2.0,0.0f,0);    // Top Right Of The Quad (Back)
-    glVertex3f(-leng/2.0,0.0f,0);    // Top Left Of The Quad (Back)
-    glVertex3f(-leng/2.0, ht,0);    // Bottom Left Of The Quad (Back)
-    glVertex3f( leng/2.0, ht,0);    // Bottom Right Of The Quad (Back)
+    glVertex3f( 0,0.0f,-wid);    // Top Right Of The Quad (Back)
+    glVertex3f(-leng,0.0f,-wid);    // Top Left Of The Quad (Back)
+    glVertex3f(-leng, ht,-wid);    // Bottom Left Of The Quad (Back)
+    glVertex3f( 0, ht,-wid);    // Bottom Right Of The Quad (Back)
     glColor3f(r,b,g);      // Color Blue
-    glVertex3f(0, ht, wid);    // Top Right Of The Quad (Left)
-    glVertex3f(-leng/2.0, ht,0);    // Top Left Of The Quad (Left)
-    glVertex3f(-leng/2.0,0,0);    // Bottom Left Of The Quad (Left)
-    glVertex3f(0,0, wid);    // Bottom Right Of The Quad (Left)
+    glVertex3f(0, ht, -0);    // Top Right Of The Quad (Left)
+    glVertex3f(-leng, ht,-wid);    // Top Left Of The Quad (Left)
+    glVertex3f(-leng,0,-wid);    // Bottom Left Of The Quad (Left)
+    glVertex3f(0,0, -0);    // Bottom Right Of The Quad (Left)
     glColor3f(r,b,g);      // Color Violet
-    glVertex3f( leng/2.0, ht,0);    // Top Right Of The Quad (Right)
-    glVertex3f( 0, ht, wid);    // Top Left Of The Quad (Right)
-    glVertex3f( 0,0.0f, wid);    // Bottom Left Of The Quad (Right)
-    glVertex3f( leng/2.0,0.0f,0);    // Bottom Right Of The Quad (Right)
+    glVertex3f( 0, ht,-wid);    // Top Right Of The Quad (Right)
+    glVertex3f( 0, ht, -0);    // Top Left Of The Quad (Right)
+    glVertex3f( 0,0.0f, -0);    // Bottom Left Of The Quad (Right)
+    glVertex3f( 0,0.0f,-wid);    // Bottom Right Of The Quad (Right)
   glEnd();
 
 
@@ -621,23 +632,52 @@ void renderScene(void) {
 
 
         // Draw ground
-   glColor3f(0.6f, 0.7f, 0.7f);
+   glColor3f(0.27f, 0.25f, 0.34f);
    glBegin(GL_QUADS);
-      glVertex3f(-road_len/2.0, -0.3f, -road_wid/2.0-1.0);
-      glVertex3f(-road_len/2.0, -0.3f,  road_wid/2.0+3.0);
-      glVertex3f( road_len/2.0, -0.3f,  road_wid/2.0+3.0);
-      glVertex3f( road_len/2.0, -0.3f, -road_wid/2.0-1.0);
-      glColor3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(-road_len/2.0, -0.4f, -road_wid/2.0);
-      glVertex3f(-road_len/2.0, -0.4f,  -road_wid/2.0-6.5);
-      glVertex3f( road_len/2.0, -0.4f,  -road_wid/2.0-6.5);
-      glVertex3f( road_len/2.0, -0.4f, -road_wid/2.0);
-      glColor3f(0.0f, 0.0f, 0.0f);
-      glVertex3f(-road_len/2.0, -0.4f, road_wid/2.0+8.5);
-      glVertex3f(-road_len/2.0, -0.4f,  road_wid/2.0);
-      glVertex3f( road_len/2.0, -0.4f,  road_wid/2.0);
-      glVertex3f( road_len/2.0, -0.4f, -road_wid/2.0+8.5);
+      glVertex3f(-road_len/1.8, -0.3f, -road_wid/2.0);
+      glVertex3f(-road_len/1.8, -0.3f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.3f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.3f, -road_wid/2.0);
+      glColor3f(0.1f, 0.5f, 0.2f);
+      glVertex3f(-road_len/1.8, -0.4f, -road_wid/2.0);
+      glVertex3f(-road_len/1.8, -0.4f,  -road_wid/2.0-6.5);
+      glVertex3f( road_len/1.8, -0.4f,  -road_wid/2.0-6.5);
+      glVertex3f( road_len/1.8, -0.4f, -road_wid/2.0);
+      glColor3f(0.1f, 0.1f, 0.1f);
+      glVertex3f(-road_len/1.8, -0.25f, -road_wid/2.0);
+      glVertex3f(-road_len/1.8, -0.25f,  -road_wid/2.0-0.75);
+      glVertex3f( road_len/1.8, -0.25f,  -road_wid/2.0-0.70);
+      glVertex3f( road_len/1.8, -0.25f, -road_wid/2.0);
+      glColor3f(0.1f, 0.5f, 0.2f);
+      glVertex3f(-road_len/1.8, -0.4f, road_wid/2.0+9.5);
+      glVertex3f(-road_len/1.8, -0.4f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.4f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.4f, -road_wid/2.0+18.5);
+      glColor3f(0.1f, 0.1f, 0.1f);
+      glVertex3f(-road_len/1.8, -0.25f, road_wid/2.0+0.75);
+      glVertex3f(-road_len/1.8, -0.25f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.25f,  road_wid/2.0);
+      glVertex3f( road_len/1.8, -0.25f, road_wid/2.0+0.7);
    glEnd();
+   float length_of_divider=2.5;
+   float width_of_divider=0.1;
+   float start=road_len/1.8;
+   int i=0;
+   while(start>(-road_len/2))
+   {
+    if((i)%2==0)
+    {glColor3f(0.9f, 0.9f, 0.9f);
+        glBegin(GL_QUADS);
+          glVertex3f(start, -0.28f, -width_of_divider/2.0);
+          glVertex3f(start, -0.28f,  width_of_divider/2.0);
+          glVertex3f( start-length_of_divider, -0.28f,  width_of_divider/2.0);
+          glVertex3f( start-length_of_divider, -0.28f, -width_of_divider/2.0);
+          
+        glEnd();}
+    i=1-i;
+    start=start-length_of_divider;
+
+   }
 
 
 
@@ -669,6 +709,27 @@ void renderScene(void) {
    n=plot_convert(road_,w,l);
 
    glPushMatrix();
+   glTranslatef(road_len/2.0-road.signal_pos+1.0,0,road_wid/2.0-2.8);
+   float length_of_zc=2.5;
+   float width_of_zc=0.3;
+   float startzc=road_wid/2.0;
+    i=0;
+   while(startzc>(-road_wid/2))
+   {
+    if((i)%2==0)
+    {glColor3f(0.9f, 0.9f, 0.9f);
+        glBegin(GL_QUADS);
+          glVertex3f(0, -0.24f, startzc-width_of_divider/2.0);
+          glVertex3f(0, -0.24f,  startzc+width_of_divider/2.0);
+          glVertex3f( -length_of_divider, -0.24f, startzc+ width_of_divider/2.0);
+          glVertex3f( -length_of_divider, -0.24f, startzc-width_of_divider/2.0);
+          
+        glEnd();}
+    i=1-i;
+    startzc=startzc-width_of_divider;
+
+   }
+   
    glTranslatef(road_len/2.0-road.signal_pos,0,-road_wid/2.0-3.0);
    draw_cylinder(0.2,8.0,0.4,0.4,0.4);
 
@@ -717,13 +778,19 @@ void renderScene(void) {
    string red_clr="red";
    string green_clr="green";
    string blue_clr="blue";
-   int i=0;
+   float offset=0.0f;
    for(;it!=lanes.end();it++)
    {
     Vehicle temp=**it;
     glPushMatrix();
+    float yval=-temp.pos[1]+road_len/2.0+temp.length;
+    float cordinatex= -temp.pos[0]+(road_wid/2.0)-0.5;
 
-    glTranslatef(-temp.pos[1]+road_len/2.0+0.5,0,-temp.pos[0]+2.5-temp.width+road_wid/2.0);
+    float xval = cordinatex;
+    glTranslatef(yval,0,xval);
+    int velocity_y=temp.velocity[1];
+    int velocity_x=temp.velocity[0];
+    double angle_rotate=0.0;
     if( strcmping(temp.color,red_clr))
       {
         r=1.0f;
@@ -732,6 +799,8 @@ void renderScene(void) {
     else if( strcmping(temp.color,green_clr))
       {
         g=0.8f;
+        r=0.2f;
+        b=0.1f;
       }
     else if( strcmping(temp.color,blue_clr))
       {
@@ -750,10 +819,18 @@ void renderScene(void) {
       veh_height=3.5;
     else if( strcmping(temp.type, bikstr))
       veh_height=1.5;
+    if(velocity_y!=0&&velocity_x!=0)
+    {
+      angle_rotate=180*(atan(velocity_y/velocity_x))/PI;
+
+    }
 
 
 
-    drawVehicle(r,b,g,temp.length/1.5,temp.width/1.5,veh_height);
+
+
+
+    drawVehicle(r,b,g,temp.length/1.35,temp.width/1.35,veh_height, angle_rotate);
 
     glPopMatrix();
     r=0.0;
