@@ -48,7 +48,12 @@ https://en.cppreference.com/w/cpp/numeric/random/uniform_real_distribution
 #define GL_SILENCE_DEPRECATION
 
 using namespace std;
-float no_of_frames=10.0;
+float no_of_frames=100.0;
+int frame_counter =0;
+int seconds=100;
+float posx=0.0;
+float posy=0.0;
+
 int no_arguments=0;
 char **names;
 bool state=true;
@@ -784,13 +789,20 @@ void renderScene(void) {
    {
     Vehicle temp=**it;
     glPushMatrix();
-    float yval=-temp.pos[1]+road_len/2.0+temp.length;
-    float cordinatex= -temp.pos[0]+(road_wid/2.0)-0.5;
+    if(frame_counter==0)
+     { posx=temp.pos[0];
+         posy=temp.pos[1];}
+    float temp_posx=temp.pos[0]+temp.velocity[0]*(frame_counter/no_of_frames);
+    float temp_posy=temp.pos[1]+temp.velocity[1]*(frame_counter/no_of_frames);
+
+
+    float yval=-temp_posy+road_len/2.0+temp.length;
+    float cordinatex= -temp_posx+(road_wid/2.0)-0.5;
 
     float xval = cordinatex;
     glTranslatef(yval,0,xval);
-    int velocity_y=temp.velocity[1];
-    int velocity_x=temp.velocity[0];
+    int velocity_y=temp.velocity[0];
+    int velocity_x=temp.velocity[1];
     double angle_rotate=0.0;
     if( strcmping(temp.color,red_clr))
       {
@@ -845,9 +857,18 @@ void renderScene(void) {
     r=0.0;
     b=0.0;
     g=0.0;
-
+    std::this_thread::sleep_for(std::chrono::milliseconds(12));
 
    }
+    if(frame_counter==no_of_frames)
+    {
+      frame_counter=0;
+      posx=0;
+      posy=0;
+    }
+    frame_counter++;
+
+
 
    glutSwapBuffers();
 }
